@@ -1,78 +1,58 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, Button, StyleSheet, Text } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import CustomPinView from '../components/PinInputComponent';
+import { NavigationProp } from '@react-navigation/native';
 
-interface PinScreenProps {
-  navigation: any;
+interface Props {
+    navigation: NavigationProp<any>; // Define the type of navigation
 }
 
-const PinScreen: React.FC<PinScreenProps> = () => {
-  const [pin, setPin] = useState('0000');
-  const [enteredPin, setEnteredPin] = useState('');
-  const [pinExists, setPinExists] = useState(false);
+const VerifyPinScreen: React.FC<Props> = ({ navigation }) => {
+    const [pin, setPin] = useState('');
+    const [error, setError] = useState('');
 
-  useEffect(() => {
-    // Check if PIN exists in AsyncStorage
-    AsyncStorage.getItem('pin').then((value) => {
-      if (value !== null) {
-        // If PIN exists, set it to state and indicate that it exists
-        setPin(value);
-        setPinExists(true);
-      }
-    });
-  }, []);
+    const handlePinInputChange = (text: string) => {
+        setPin(text);
+        setError(''); // Clear any previous error when pin is being entered
+    };
 
-  // Function to handle pin input change
-  const handlePinInputChange = (inputtedPin: string) => {
-    setEnteredPin(inputtedPin);
-  };
+    const handlePinVerification = async () => {
+        try {
+            const savedPin = await AsyncStorage.getItem('pin');
+            console.log(savedPin);
+            if (pin === savedPin) {
+                console.log('PIN is correct');
+                navigation.navigate('Main'); // Navigate to main screen if PIN is correct
+            } else {
+                setError('Incorrect PIN. Please try again.');
+            }
+        } catch (retrieveError) {
+            console.error('Error retrieving PIN:', retrieveError);
+            setError('Error verifying PIN');
+        }
+    };
 
-  // Function to verify the pin
-  const verifyPin = () => {
-    if (enteredPin === pin) {
-      console.log('Pin is correct');
-      // Navigate to the main screen if pin is correct
-      // Example: navigation.navigate('Main');
-    } else {
-      console.log('Incorrect PIN');
-      // Optionally, you can clear the entered pin or display an error message
-      setEnteredPin('');
-    }
-  };
-
-  const createPinFile = async () => {
-    try {
-      // Save PIN to AsyncStorage
-      await AsyncStorage.setItem('pin', pin);
-      console.log('PIN file created successfully');
-    } catch (error) {
-      console.error('Error creating PIN file:', error);
-    }
-  };
-
-  return (
-    <View style={styles.container}>
-      <Text>Enter your PIN:</Text>
-      {/* Use the CustomPinView component with the custom onInputChange handler */}
-      <CustomPinView
-        pinLength={pin.length}
-        onInputChange={handlePinInputChange}
-      />
-      {/* Button to verify the pin */}
-      <Button title="Verify PIN" onPress={verifyPin} />
-      {/* Button to create PIN file if it doesn't exist */}
-      {!pinExists && <Button title="Create PIN File" onPress={createPinFile} />}
-    </View>
-  );
+    return (
+        <View style={styles.container}>
+            <Text>Please enter your PIN:</Text>
+            <CustomPinView pinLength={4} onInputChange={handlePinInputChange} />
+            {error ? <Text style={styles.errorText}>{error}</Text> : null}
+            <Button title="Enter" onPress={handlePinVerification} />
+        </View>
+    );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+    container: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    errorText: {
+        color: 'red',
+        marginTop: 10,
+    },
 });
 
-export default PinScreen;
+export default VerifyPinScreen;

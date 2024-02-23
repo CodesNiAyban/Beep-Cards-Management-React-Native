@@ -9,12 +9,11 @@ interface PinInput {
 const CustomPinView: React.FC<PinInput> = ({ pinLength, onInputChange }) => {
   const inputRefs = useRef<TextInput[]>([]);
 
-  const handleChangeText = (text: string, index: number) => {
-    if (text.length === 1 && index < pinLength - 1 && inputRefs.current[index + 1]) {
-      // Move focus to the next input
-      inputRefs.current[index + 1].focus();
-    }
-    onInputChange(text);
+  const handleChangeText = (index: number, text: string) => {
+    const newTexts = inputRefs.current.map((_, idx) => (idx === index ? text : ''));
+    const pin = newTexts.join(''); // Concatenate all input values
+    onInputChange(pin); // Pass the complete PIN string to the callback
+    // Optionally, you can also set focus or perform other actions based on the complete PIN input
   };
 
   return (
@@ -28,7 +27,7 @@ const CustomPinView: React.FC<PinInput> = ({ pinLength, onInputChange }) => {
           style={styles.input}
           keyboardType="numeric"
           maxLength={1}
-          onChangeText={(text) => handleChangeText(text, index)}
+          onChangeText={(text) => handleChangeText(index, text)}
         />
       ))}
     </View>
