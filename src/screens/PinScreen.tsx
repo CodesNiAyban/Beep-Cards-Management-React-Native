@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NavigationProp } from '@react-navigation/native';
 import React, { useEffect, useState } from 'react';
-import { Button, StyleSheet, View } from 'react-native';
+import { Button, StyleSheet, View, Text } from 'react-native';
 import ToastManager, { Toast } from 'toastify-react-native';
 import CustomPinKeyboard from '../components/CustomPinKeyboard';
 
@@ -35,7 +35,7 @@ const VerifyPinScreen: React.FC<Props> = ({ navigation }) => {
                     console.log('PIN is correct');
                     navigation.navigate('Main');
                 } else {
-                    Toast.error('Incorrect PIN. Please try again.', 'top');
+                    Toast.error('Incorrect PIN.', 'top');
                 }
             } catch (retrieveError) {
                 console.error('Error retrieving PIN:', retrieveError);
@@ -55,8 +55,11 @@ const VerifyPinScreen: React.FC<Props> = ({ navigation }) => {
 
     return (
         <View style={styles.container}>
+            <View style={styles.titleContainer}>
+                <Text style={styles.title}>MRT ONLINE BEEP CARD MANAGER</Text>
+            </View>
             <CustomPinKeyboard pinLength={4} onInputChange={handlePinInputChange} storedPin={storedPin} />
-            <Button title="Delete PIN" onPress={handleDeletePin} />
+            <Button title="Delete PIN" onPress={handleDeletePin} color="#FF6F00" />
             <ToastManager />
         </View>
     );
@@ -67,7 +70,20 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#FFFFFF',
+        backgroundColor: '#FF6F00', // Orange background color
+        padding: 20,
+    },
+    titleContainer: {
+        backgroundColor: '#FFFFFF', // White background color for the container
+        padding: 10,
+        borderRadius: 10,
+        marginBottom: 20,
+    },
+    title: {
+        fontSize: 28,
+        fontWeight: 'bold',
+        color: '#FF6F00', // Orange text color
+        textAlign: 'center', // Center align the text
     },
 });
 

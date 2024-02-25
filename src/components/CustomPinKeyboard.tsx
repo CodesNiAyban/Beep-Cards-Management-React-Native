@@ -82,6 +82,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 10,
+    backgroundColor: '#FF6F00', // Orange background color
   },
   pinContainer: {
     flexDirection: 'row',
@@ -97,7 +98,7 @@ const styles = StyleSheet.create({
     margin: 5,
   },
   circleFilled: {
-    backgroundColor: '#000', // Change color to indicate filled circle
+    backgroundColor: '#FF6F00', // Orange color for filled circle
   },
   row: {
     flexDirection: 'row',
@@ -107,6 +108,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 10,
+    color: '#FFFFFF', // White text color
   },
   button: {
     justifyContent: 'center',
@@ -119,6 +121,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontSize: 24,
+    color: '#000', // Black text color
   },
 });
 
