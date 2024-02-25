@@ -1,7 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NavigationProp } from '@react-navigation/native';
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, Button } from 'react-native';
+import { Button, StyleSheet, View } from 'react-native';
+import ToastManager, { Toast } from 'toastify-react-native';
 import CustomPinKeyboard from '../components/CustomPinKeyboard';
 
 interface Props {
@@ -9,18 +10,16 @@ interface Props {
 }
 
 const VerifyPinScreen: React.FC<Props> = ({ navigation }) => {
-    const [error, setError] = useState('');
     const [storedPin, setStoredPin] = useState('');
 
     useEffect(() => {
-
         const getStoredPin = async () => {
             try {
                 const pin = await AsyncStorage.getItem('pin');
                 if (pin) {
                     setStoredPin(pin);
                 }
-            } catch (retrieveError) { // Changed variable name from 'error' to 'retrieveError'
+            } catch (retrieveError) {
                 console.error('Error retrieving PIN:', retrieveError);
             }
         };
@@ -36,14 +35,12 @@ const VerifyPinScreen: React.FC<Props> = ({ navigation }) => {
                     console.log('PIN is correct');
                     navigation.navigate('Main');
                 } else {
-                    setError('Incorrect PIN. Please try again.');
+                    Toast.error('Incorrect PIN. Please try again.', 'top');
                 }
             } catch (retrieveError) {
                 console.error('Error retrieving PIN:', retrieveError);
-                setError('Error verifying PIN');
+                Toast.error('Error verifying PIN', 'top');
             }
-        } else {
-            setError('');
         }
     };
 
@@ -58,10 +55,9 @@ const VerifyPinScreen: React.FC<Props> = ({ navigation }) => {
 
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Enter Your PIN</Text>
             <CustomPinKeyboard pinLength={4} onInputChange={handlePinInputChange} storedPin={storedPin} />
-            {error ? <Text style={styles.errorText}>{error}</Text> : null}
             <Button title="Delete PIN" onPress={handleDeletePin} />
+            <ToastManager />
         </View>
     );
 };
@@ -73,16 +69,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         backgroundColor: '#FFFFFF',
     },
-    title: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        marginBottom: 20,
-    },
-    errorText: {
-        color: 'red',
-        marginTop: 10,
-    },
 });
 
 export default VerifyPinScreen;
-

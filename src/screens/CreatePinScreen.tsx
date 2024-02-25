@@ -3,6 +3,7 @@ import { View, Button, StyleSheet, Text } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import CustomPinView from '../components/PinInputComponent';
 import { NavigationProp } from '@react-navigation/native';
+import ToastManager, { Toast } from 'toastify-react-native';
 
 interface Props {
     navigation: NavigationProp<any>;
@@ -11,7 +12,6 @@ interface Props {
 const CreatePinScreen: React.FC<Props> = ({ navigation }) => {
     const [pin, setPin] = useState('');
     const [verifyPin, setVerifyPin] = useState('');
-    const [errorMessage, setErrorMessage] = useState('');
 
     useEffect(() => {
         const checkPinExists = async () => {
@@ -30,12 +30,10 @@ const CreatePinScreen: React.FC<Props> = ({ navigation }) => {
 
     const handlePinInputChange = (text: string) => {
         setPin(text);
-        setErrorMessage('');
     };
 
     const handleVerifyPinInputChange = (text: string) => {
         setVerifyPin(text);
-        setErrorMessage('');
     };
 
     const handlePinCreation = async () => {
@@ -46,21 +44,21 @@ const CreatePinScreen: React.FC<Props> = ({ navigation }) => {
                 navigation.navigate('Main');
             } catch (error) {
                 console.error('Error creating PIN file:', error);
-                setErrorMessage('Error creating PIN file');
+                Toast.error('Error creating PIN file', 'top');
             }
         } else {
-            setErrorMessage('Pins do not match');
+            Toast.error('Pins do not match', 'top');
         }
     };
 
-   return (
+    return (
         <View style={styles.container}>
             <Text style={styles.title}>Create a New PIN</Text>
             <CustomPinView pinLength={4} onInputChange={handlePinInputChange} />
             <Text style={styles.subtitle}>Verify Your PIN</Text>
             <CustomPinView pinLength={4} onInputChange={handleVerifyPinInputChange} />
-            {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
             <Button title="Create PIN" onPress={handlePinCreation} />
+            <ToastManager />
         </View>
     );
 };
@@ -71,19 +69,21 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         backgroundColor: '#FFFFFF',
+        padding: 20,
     },
     title: {
-        fontSize: 24,
+        fontSize: 28,
         fontWeight: 'bold',
         marginBottom: 20,
     },
     subtitle: {
-        fontSize: 18,
+        fontSize: 20,
         marginBottom: 10,
     },
     errorText: {
         color: 'red',
         marginTop: 10,
+        fontSize: 16,
     },
 });
 
