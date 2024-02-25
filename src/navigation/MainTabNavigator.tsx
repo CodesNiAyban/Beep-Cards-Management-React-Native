@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import { TouchableOpacity, View, StyleSheet } from 'react-native';
 import BeepCardsScreen from '../screens/BeepCardsScreen'; // Import BeepCardsScreen component
 import TransactionsScreen from '../screens/TransactionsScreen'; // Import TransactionsScreen component
+import AddBeepCardModal from '../components/AddBeepCardModal'; // Import AddBeepCardModal component
 
 const Tab = createBottomTabNavigator();
 
@@ -48,6 +49,11 @@ const AddBeepCardButton: React.FC<AddBeepCardButtonProps> = ({ onPress }) => (
 );
 
 const MainTabNavigator = () => {
+  const [isModalVisible, setIsModalVisible] = useState(false); // State to manage modal visibility
+
+  const toggleModal = () => {
+    setIsModalVisible(!isModalVisible); // Toggle modal visibility
+  };
   return (
     <View style={screenContainerStyle}>
       <Tab.Navigator
@@ -92,7 +98,8 @@ const MainTabNavigator = () => {
           }}
         />
       </Tab.Navigator>
-      <AddBeepCardButton onPress={() => console.log('Add Beep Card pressed')} />
+      <AddBeepCardButton onPress={toggleModal} />
+      <AddBeepCardModal isVisible={isModalVisible} onClose={toggleModal} />
     </View>
   );
 };

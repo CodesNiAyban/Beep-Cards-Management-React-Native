@@ -1,90 +1,41 @@
-/* eslint-disable react-native/no-inline-styles */
+
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, ScrollView } from 'react-native';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import { TransactionItem as TransactionModel } from '../models/TransactionsModel';
 
+// Sample JSON data for transactions
 const jsonData = [
   {
-    UUIC: Math.floor(Math.random() * 1000000000000000), // Generating a random UUIC
-    tapIn: Math.random() < 0.5, // Randomly assigning true or false
-    initialBalance: String(Math.floor(Math.random() * 10000)), // Generating a random initial balance
-    prevStation: 'Station1', // Dummy station name
-    currStation: 'Station2', // Dummy station name
-    distance: Math.floor(Math.random() * 100), // Generating a random distance
-    fare: Math.floor(Math.random() * 50), // Generating a random fare
-    currBalance: Math.floor(Math.random() * 10000), // Generating a random current balance
-    createdAt: randomDate(new Date(2020, 0, 1), new Date()), // Setting random date
-    updatedAt: randomDate(new Date(2020, 0, 1), new Date()), // Setting random date
+    _id: '1', // Unique identifier for the transaction
+    UUIC: Math.floor(Math.random() * 1000000000000000),
+    tapIn: Math.random() < 0.5,
+    initialBalance: String(Math.floor(Math.random() * 10000)),
+    prevStation: 'Station1',
+    currStation: 'Station2',
+    distance: Math.floor(Math.random() * 100),
+    fare: Math.floor(Math.random() * 50),
+    currBalance: Math.floor(Math.random() * 10000),
+    createdAt: randomDate(new Date(2020, 0, 1), new Date()),
+    updatedAt: randomDate(new Date(2020, 0, 1), new Date()),
   },
-  {
-    UUIC: Math.floor(Math.random() * 1000000000000000), // Generating a random UUIC
-    tapIn: Math.random() < 0.5, // Randomly assigning true or false
-    initialBalance: String(Math.floor(Math.random() * 10000)), // Generating a random initial balance
-    prevStation: 'Station1', // Dummy station name
-    currStation: 'Station2', // Dummy station name
-    distance: Math.floor(Math.random() * 100), // Generating a random distance
-    fare: Math.floor(Math.random() * 50), // Generating a random fare
-    currBalance: Math.floor(Math.random() * 10000), // Generating a random current balance
-    createdAt: randomDate(new Date(2020, 0, 1), new Date()), // Setting random date
-    updatedAt: randomDate(new Date(2020, 0, 1), new Date()), // Setting random date
-  },
-  {
-    UUIC: Math.floor(Math.random() * 1000000000000000), // Generating a random UUIC
-    tapIn: Math.random() < 0.5, // Randomly assigning true or false
-    initialBalance: String(Math.floor(Math.random() * 10000)), // Generating a random initial balance
-    prevStation: 'Station1', // Dummy station name
-    currStation: 'Station2', // Dummy station name
-    distance: Math.floor(Math.random() * 100), // Generating a random distance
-    fare: Math.floor(Math.random() * 50), // Generating a random fare
-    currBalance: Math.floor(Math.random() * 10000), // Generating a random current balance
-    createdAt: randomDate(new Date(2020, 0, 1), new Date()), // Setting random date
-    updatedAt: randomDate(new Date(2020, 0, 1), new Date()), // Setting random date
-  },
-  {
-    UUIC: Math.floor(Math.random() * 1000000000000000), // Generating a random UUIC
-    tapIn: Math.random() < 0.5, // Randomly assigning true or false
-    initialBalance: String(Math.floor(Math.random() * 10000)), // Generating a random initial balance
-    prevStation: 'Station1', // Dummy station name
-    currStation: 'Station2', // Dummy station name
-    distance: Math.floor(Math.random() * 100), // Generating a random distance
-    fare: Math.floor(Math.random() * 50), // Generating a random fare
-    currBalance: Math.floor(Math.random() * 10000), // Generating a random current balance
-    createdAt: randomDate(new Date(2020, 0, 1), new Date()), // Setting random date
-    updatedAt: randomDate(new Date(2020, 0, 1), new Date()), // Setting random date
-  },
-  {
-    UUIC: Math.floor(Math.random() * 1000000000000000), // Generating a random UUIC
-    tapIn: Math.random() < 0.5, // Randomly assigning true or false
-    initialBalance: String(Math.floor(Math.random() * 10000)), // Generating a random initial balance
-    prevStation: 'Station1', // Dummy station name
-    currStation: 'Station2', // Dummy station name
-    distance: Math.floor(Math.random() * 100), // Generating a random distance
-    fare: Math.floor(Math.random() * 50), // Generating a random fare
-    currBalance: Math.floor(Math.random() * 10000), // Generating a random current balance
-    createdAt: randomDate(new Date(2020, 0, 1), new Date()), // Setting random date
-    updatedAt: randomDate(new Date(2020, 0, 1), new Date()), // Setting random date
-  },
+  // Add more transaction objects here with unique _id values
 ];
-
 
 function randomDate(start: Date, end: Date) {
   return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
 }
 
 const TransactionScreen = () => {
-  // State to hold transactions data
   const [transactionsData, setTransactionsData] = useState<TransactionModel[]>([]);
+  const [expandedGroups, setExpandedGroups] = useState<{ [key: string]: boolean }>({});
 
-  // Fetch transactions data
   useEffect(() => {
-    // Simulating data fetching with setTimeout
     setTimeout(() => {
       setTransactionsData(jsonData);
-    }, 1000); // Simulating delay for fetching data
+    }, 1000);
   }, []);
 
-  // Function to group transactions by date
   const groupedTransactions = transactionsData.reduce((acc, transaction) => {
     const date = new Date(transaction.createdAt).toLocaleDateString();
     if (!acc[date]) {
@@ -94,10 +45,6 @@ const TransactionScreen = () => {
     return acc;
   }, {} as { [key: string]: TransactionModel[] });
 
-  // State to track whether each group is expanded or collapsed
-  const [expandedGroups, setExpandedGroups] = useState<{ [key: string]: boolean }>({});
-
-  // Function to toggle group expansion
   const toggleGroup = (date: string) => {
     setExpandedGroups((prevState) => ({
       ...prevState,
@@ -105,49 +52,38 @@ const TransactionScreen = () => {
     }));
   };
 
-  const renderItem = ({ item }: { item: TransactionModel }) => (
-    <View style={styles.transactionItem}>
-      <FontAwesome5 name={item.tapIn ? 'arrow-circle-up' : 'arrow-circle-down'} size={24} color="#333" style={styles.icon} />
-      <View style={styles.transactionDetails}>
-        <Text style={[styles.text, { color: '#416D19', fontSize: 18 }]}>
-          <FontAwesome5 name="clock" size={16} color="#416D19" /> {new Date(item.createdAt).toLocaleTimeString()}
-        </Text>
-        <Text style={[styles.text, { color: '#638889', fontSize: 18 }]}>
-          <FontAwesome5 name="id-card" size={16} color="#638889" /> UUIC: {item.UUIC}
-        </Text>
-        <Text style={[styles.text, { color: '#4F6F52', fontSize: 18 }]}>
-          <FontAwesome5 name="coins" size={16} color="#4F6F52" /> Initial Balance: ${item.initialBalance}
-        </Text>
-        {!item.tapIn && (
-          <Text style={[styles.text, { color: '#3E3232', fontSize: 18 }]}>
-            <FontAwesome5 name="train" size={16} color="#3E3232" /> Previous Station: {item.prevStation}
-          </Text>
-        )}
-        <Text style={[styles.text, { color: '#116D6E', fontSize: 18 }]}>
-          <FontAwesome5 name="train" size={16} color="#116D6E" /> Current Station: {item.currStation}
-        </Text>
-        <Text style={[styles.text, { color: '#638889', fontSize: 18 }]}>
-          <FontAwesome5 name="road" size={16} color="#333" /> Distance between Stations: {item.distance} km
-        </Text>
-        <Text style={[styles.text, { color: '#FF0000', fontSize: 18 }]}>
-          <FontAwesome5 name="money-bill-alt" size={16} color="#FF0000" /> Fare: -${item.fare}
-        </Text>
-        <Text style={[styles.text, { color: '#FFF6E9', fontSize: 18 }]}>
-          <FontAwesome5 name="wallet" size={16} color="#FFF6E9" /> Current Balance: ${item.currBalance}
-        </Text>
-      </View>
-    </View>
-  );
+  const renderItem = ({ item }: { item: TransactionModel }) => {
+    // Get transaction time with hours, minutes, and seconds
+    const transactionTime = new Date(item.createdAt);
+    const transactionTimeFormatted = `${transactionTime.getHours().toString().padStart(2, '0')}:${transactionTime.getMinutes().toString().padStart(2, '0')}:${transactionTime.getSeconds().toString().padStart(2, '0')}`;
 
-  // Render header for each date
+    return (
+      <View style={styles.transactionItem}>
+        <View style={styles.transactionIcon}>
+          <FontAwesome5 name={item.tapIn ? 'arrow-circle-up' : 'arrow-circle-down'} size={24} color="#FFF" />
+        </View>
+        <View style={styles.transactionDetails}>
+          <Text style={styles.text}>UUIC: {item.UUIC}</Text>
+          <Text style={styles.text}>Initial Balance: PhP {item.initialBalance}</Text>
+          <Text style={styles.text}>From: {item.prevStation}</Text>
+          <Text style={styles.text}>To: {item.currStation}</Text>
+          <Text style={styles.text}>Distance: {item.distance} km</Text>
+          <Text style={styles.text}>Fare: -PhP {item.fare}</Text>
+          <Text style={styles.text}>Current Balance: PhP {item.currBalance}</Text>
+          <Text style={styles.text}>Time: {transactionTimeFormatted}</Text>
+        </View>
+      </View>
+    );
+  };
+
   const renderDateHeader = (date: string) => (
     <TouchableOpacity onPress={() => toggleGroup(date)} style={styles.dateHeaderContainer}>
+      <FontAwesome5 name="calendar" size={20} color="black" style={styles.marginLeft} />
       <Text style={styles.dateHeaderText}>{date}</Text>
       <FontAwesome5 name={expandedGroups[date] ? 'chevron-up' : 'chevron-down'} size={20} color="black" />
     </TouchableOpacity>
   );
 
-  // Render transactions for each date
   const renderTransactionsForDate = (date: string) => {
     const transactionsForDate = groupedTransactions[date];
     return expandedGroups[date] ? (
@@ -162,7 +98,6 @@ const TransactionScreen = () => {
     ) : null;
   };
 
-  // Render message when no transactions are found
   const renderEmptyMessage = () => (
     <View style={styles.emptyContainer}>
       <Text style={styles.emptyText}>
@@ -191,54 +126,72 @@ const TransactionScreen = () => {
 
 const styles = StyleSheet.create({
   scrollContainer: {
-    backgroundColor: '#FFF8E1',
+    backgroundColor: '#FFEBCD',
     flexGrow: 1,
   },
   container: {
     flex: 1,
-    backgroundColor: '#FFF8E1',
+    backgroundColor: '#FFEBCD',
     padding: 20,
   },
   transactionItem: {
     flexDirection: 'row',
-    backgroundColor: '#FFA726',
+    backgroundColor: '#FFF',
     padding: 15,
     borderRadius: 10,
     marginBottom: 15,
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
-  icon: {
-    marginRight: 10,
+  transactionIcon: {
+    backgroundColor: '#FFA726',
+    borderRadius: 25,
+    padding: 10,
+    marginRight: 15,
   },
   transactionDetails: {
     flex: 1,
-    backgroundColor: '#FFA726',
-    padding: 15,
-    borderRadius: 10,
   },
   text: {
     fontSize: 16,
-    color: '#333', // Dark text color
+    color: '#333',
     marginBottom: 5,
   },
   dateHeaderContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#FFC107', // Amber color
-    paddingVertical: 10,
+    backgroundColor: '#FF6F00',
+    paddingVertical: 15,
     paddingHorizontal: 20,
-    borderRadius: 5,
-    marginBottom: 10,
+    borderRadius: 10,
+    marginBottom: 15,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  marginLeft: {
+    marginLeft: 10,
   },
   dateHeaderText: {
     fontSize: 18,
     fontWeight: 'bold',
-    fontFamily: 'Roboto', // Use a suitable font family
-    color: '#333', // Dark text color
+    color: '#FFF',
   },
   divider: {
-    borderBottomColor: '#333',
+    borderBottomColor: '#E0E0E0',
     borderBottomWidth: 1,
     marginVertical: 10,
   },
@@ -251,8 +204,8 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 24,
     textAlign: 'center',
-    color: '#555', // Dark gray text color
-    lineHeight: 30, // Increase line height for better readability
+    color: '#555',
+    lineHeight: 30,
   },
 });
 

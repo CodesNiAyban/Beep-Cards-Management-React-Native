@@ -1,7 +1,9 @@
-import React from 'react';
+// BeepCardsScreen.tsx
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import { BeepCardItem as BeepCardsModel } from '../models/BeepCardsModel';
+import ConfirmationModal from '../components/ConfirmationModal';
 
 // Sample JSON data for beep cards
 const beepCardsData: BeepCardsModel[] = [
@@ -36,6 +38,22 @@ const formatDate = (dateString: string): string => {
 };
 
 const BeepCardsScreen = () => {
+  const [selectedBeepCard, setSelectedBeepCard] = useState<BeepCardsModel | null>(null);
+  const [isConfirmationModalVisible, setIsConfirmationModalVisible] = useState(false);
+
+  const handleTrashPress = (item: BeepCardsModel) => {
+    setSelectedBeepCard(item);
+    setIsConfirmationModalVisible(true);
+  };
+
+  const handleConfirmDelete = () => {
+    // Logic to delete the selected beep card
+    // Once the deletion is done, you can close the modal and update the beepCardsData array
+    // For demonstration purposes, let's just log the action
+    console.log('Beep card deleted:', selectedBeepCard?.UUIC);
+    setIsConfirmationModalVisible(false);
+  };
+
   // Function to determine the latest timestamp
   const getLatestTimestamp = (createdAt: string, updatedAt: string): string => {
     return new Date(updatedAt) > new Date(createdAt) ? updatedAt : createdAt;
@@ -47,7 +65,7 @@ const BeepCardsScreen = () => {
   };
 
   // Render item for FlatList
-  const renderItem = ({ item }: { item: BeepCardsModel}) => {
+  const renderItem = ({ item }: { item: BeepCardsModel }) => {
     const latestTimestamp = getLatestTimestamp(item.createdAt, item.updatedAt);
     const timestampText = latestTimestamp === item.createdAt ? 'Created at' : 'Last Updated';
 
@@ -55,8 +73,10 @@ const BeepCardsScreen = () => {
       <TouchableOpacity style={styles.cardContainer}>
         <View style={styles.cardHeader}>
           <FontAwesome5 name="credit-card" size={18} color="#333" style={styles.icon} />
-          <Text style={styles.cardHeaderText}>Card Details</Text>
-          <FontAwesome5 name="trash" size={18} color="#999" style={styles.trashIcon} />
+          <Text style={styles.cardHeaderText}>Beep Card Details</Text>
+          <TouchableOpacity onPress={() => handleTrashPress(item)}>
+            <FontAwesome5 name="trash" size={18} color="#999" style={styles.trashIcon} />
+          </TouchableOpacity>
         </View>
         <View style={styles.cardDetails}>
           <View style={styles.row}>
@@ -64,8 +84,8 @@ const BeepCardsScreen = () => {
             <Text style={styles.cardName}>UUID: {item.UUIC}</Text>
           </View>
           <View style={styles.row}>
-            <FontAwesome5 name="dollar-sign" size={20} color="#FFFFFF" style={styles.icon} />
-            <Text style={styles.cardBalance}>Balance: ${item.balance}</Text>
+            <FontAwesome5 name="money-bill-alt" size={16} color="#FFFFFF" style={styles.icon} />
+            <Text style={styles.cardBalance}>Balance: PhP {item.balance}</Text>
           </View>
           <View style={styles.row}>
             <FontAwesome5 name="calendar-alt" size={16} color="#FFFFFF" style={styles.icon} />
@@ -106,6 +126,14 @@ const BeepCardsScreen = () => {
       ) : (
         renderEmptyMessage()
       )}
+      <ConfirmationModal
+        isVisible={isConfirmationModalVisible}
+        onClose={() => setIsConfirmationModalVisible(false)}
+        onConfirm={handleConfirmDelete}
+        title={'Delete Beep Card'}
+        message={'Do you want to remove the following beep card from your list of beep cards?'}
+        beepCardDetails={selectedBeepCard ? `UUID: ${selectedBeepCard.UUIC}` : ''}
+      />
     </View>
   );
 };
@@ -113,7 +141,7 @@ const BeepCardsScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFF8E1', // Cream background color
+    backgroundColor: '#FFEBCD',
   },
   list: {
     flexGrow: 1,
@@ -125,17 +153,27 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 10,
     marginBottom: 15,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 10,
+    paddingHorizontal: 10, // Added paddingHorizontal for consistent padding
   },
   cardHeaderText: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#333', // Dark text color
+    fontFamily: 'Roboto', // Changed font to Roboto
   },
   trashIcon: {
     marginLeft: 'auto', // Push the trash icon to the right
@@ -147,16 +185,22 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#FFFFFF', // White text color
     marginBottom: 5,
+    fontFamily: 'Roboto', // Changed font to Roboto
+    paddingHorizontal: 10, // Added paddingHorizontal for consistent padding
   },
   cardBalance: {
     fontSize: 16,
     color: '#FFFFFF', // White text color
     marginBottom: 5,
+    fontFamily: 'Roboto', // Changed font to Roboto
+    paddingHorizontal: 10, // Added paddingHorizontal for consistent padding
   },
   timestamp: {
     fontSize: 16,
     color: '#FFFFFF', // White text color
     marginBottom: 5,
+    fontFamily: 'Roboto', // Changed font to Roboto
+    paddingHorizontal: 10, // Added paddingHorizontal for consistent padding
   },
   badge: {
     width: 8,
@@ -176,6 +220,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF', // White text color
     fontWeight: 'bold',
     marginLeft: 5, // Add margin to separate text from circle
+    fontFamily: 'Roboto', // Changed font to Roboto
   },
   emptyContainer: {
     flex: 1,
@@ -188,13 +233,15 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#555', // Dark gray text color
     lineHeight: 30, // Increase line height for better readability
+    fontFamily: 'Roboto', // Changed font to Roboto
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
+    paddingHorizontal: 10, // Added paddingHorizontal for consistent padding
   },
   icon: {
-    marginRight: 10,
+    marginRight: 5,
   },
 });
 

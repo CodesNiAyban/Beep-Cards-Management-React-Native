@@ -1,4 +1,5 @@
 export interface TransactionItem {
+    _id: string,
     UUIC: number;
     tapIn: boolean;
     initialBalance: string;
