@@ -1,20 +1,48 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { View, TextInput, StyleSheet } from 'react-native';
 
-interface PinInput {
+interface PinInputProps {
   pinLength: number;
-  onInputChange: (inputtedPin: string) => void;
+  onInputChange: (pin: string) => void;
 }
 
-const CustomPinView: React.FC<PinInput> = ({ pinLength, onInputChange }) => {
-  const inputRefs = useRef<TextInput[]>([]);
+const PinInput: React.FC<PinInputProps> = ({ pinLength, onInputChange }) => {
+  const [pin, setPin] = useState<string[]>(Array(pinLength).fill(''));
+  const inputRefs = useRef<TextInput[]>(Array(pinLength).fill(null));
 
   const handleChangeText = (index: number, text: string) => {
-    const newTexts = inputRefs.current.map((_, idx) => (idx === index ? text : ''));
-    const pin = newTexts.join(''); // Concatenate all input values
-    onInputChange(pin); // Pass the complete PIN string to the callback
-    // Optionally, you can also set focus or perform other actions based on the complete PIN input
+    // Ensure only numbers are inputted
+    if (/^\d*$/.test(text)) {
+      const newPin = [...pin];
+
+      // Replace the current existing number
+      newPin[index] = text;
+
+      // Update the state with the new PIN
+      setPin(newPin);
+
+      // Join the PIN digits to form a string
+      const pinString = newPin.join('');
+
+      // Call the callback function with the updated PIN string
+      onInputChange(pinString);
+
+      // Calculate the index for the next input
+      let nextIndex;
+
+      if (text.length > 0) {
+        // Increment to the next box if text is inputted
+        nextIndex = Math.min(index + 1, pinLength - 1);
+      } else {
+        // Decrement to the previous box if text is deleted
+        nextIndex = Math.max(index - 1, 0);
+      }
+
+      // Focus on the next input box if it exists
+      inputRefs.current[nextIndex]?.focus();
+    }
   };
+
 
   return (
     <View style={styles.container}>
@@ -27,6 +55,7 @@ const CustomPinView: React.FC<PinInput> = ({ pinLength, onInputChange }) => {
           style={styles.input}
           keyboardType="numeric"
           maxLength={1}
+          value={pin[index]}
           onChangeText={(text) => handleChangeText(index, text)}
         />
       ))}
@@ -51,4 +80,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default CustomPinView;
+export default PinInput;

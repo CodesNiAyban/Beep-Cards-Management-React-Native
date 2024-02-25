@@ -1,26 +1,41 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Button, StyleSheet, Text } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import CustomPinView from '../components/PinInputComponent';
-import { NavigationProp } from '@react-navigation/native'; // Import NavigationProp type
+import { NavigationProp } from '@react-navigation/native';
 
 interface Props {
-    navigation: NavigationProp<any>; // Define the type of navigation
+    navigation: NavigationProp<any>;
 }
 
-const CreatePinScreen: React.FC<Props> = ({ navigation }) => { // Use the defined Props interface
+const CreatePinScreen: React.FC<Props> = ({ navigation }) => {
     const [pin, setPin] = useState('');
     const [verifyPin, setVerifyPin] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
 
-    const handlePinInputChange = (text: string) => { // Correct the type of text to string
+    useEffect(() => {
+        const checkPinExists = async () => {
+            try {
+                const pinCheck = await AsyncStorage.getItem('pin');
+                if (pinCheck) {
+                    navigation.navigate('Pin'); // Navigate to PinScreen if PIN exists
+                }
+            } catch (error) {
+                console.error('Error checking if PIN exists:', error);
+            }
+        };
+
+        checkPinExists();
+    }, [navigation]);
+
+    const handlePinInputChange = (text: string) => {
         setPin(text);
-        setErrorMessage(''); // Clear any previous error message when pin is being entered
+        setErrorMessage('');
     };
 
-    const handleVerifyPinInputChange = (text: string) => { // Correct the type of text to string
+    const handleVerifyPinInputChange = (text: string) => {
         setVerifyPin(text);
-        setErrorMessage(''); // Clear any previous error message when verify pin is being entered
+        setErrorMessage('');
     };
 
     const handlePinCreation = async () => {
@@ -28,7 +43,7 @@ const CreatePinScreen: React.FC<Props> = ({ navigation }) => { // Use the define
             try {
                 await AsyncStorage.setItem('pin', pin);
                 console.log('PIN file created successfully');
-                navigation.navigate('PinVerified');
+                navigation.navigate('Main');
             } catch (error) {
                 console.error('Error creating PIN file:', error);
                 setErrorMessage('Error creating PIN file');
@@ -38,11 +53,11 @@ const CreatePinScreen: React.FC<Props> = ({ navigation }) => { // Use the define
         }
     };
 
-    return (
+   return (
         <View style={styles.container}>
-            <Text>Enter your new PIN:</Text>
+            <Text style={styles.title}>Create a New PIN</Text>
             <CustomPinView pinLength={4} onInputChange={handlePinInputChange} />
-            <Text>Verify your new PIN:</Text>
+            <Text style={styles.subtitle}>Verify Your PIN</Text>
             <CustomPinView pinLength={4} onInputChange={handleVerifyPinInputChange} />
             {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
             <Button title="Create PIN" onPress={handlePinCreation} />
@@ -55,6 +70,16 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
+        backgroundColor: '#FFFFFF',
+    },
+    title: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        marginBottom: 20,
+    },
+    subtitle: {
+        fontSize: 18,
+        marginBottom: 10,
     },
     errorText: {
         color: 'red',
