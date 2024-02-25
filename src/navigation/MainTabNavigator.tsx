@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { useNavigation } from '@react-navigation/native'; // Import useNavigation hook
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
-import { TouchableOpacity, View, StyleSheet } from 'react-native';
+import AddBeepCardModal from '../components/AddBeepCardModal'; // Import AddBeepCardModal component
 import BeepCardsScreen from '../screens/BeepCardsScreen'; // Import BeepCardsScreen component
 import TransactionsScreen from '../screens/TransactionsScreen'; // Import TransactionsScreen component
-import AddBeepCardModal from '../components/AddBeepCardModal'; // Import AddBeepCardModal component
 
 const Tab = createBottomTabNavigator();
 
@@ -50,10 +51,21 @@ const AddBeepCardButton: React.FC<AddBeepCardButtonProps> = ({ onPress }) => (
 
 const MainTabNavigator = () => {
   const [isModalVisible, setIsModalVisible] = useState(false); // State to manage modal visibility
+  const navigation = useNavigation(); // Access navigation object
 
   const toggleModal = () => {
     setIsModalVisible(!isModalVisible); // Toggle modal visibility
   };
+
+  // Disable going back when the component mounts
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('beforeRemove', (e) => {
+      e.preventDefault(); // Prevent default navigation action
+    });
+
+    return unsubscribe; // Clean up event listener
+  }, [navigation]);
+
   return (
     <View style={screenContainerStyle}>
       <Tab.Navigator
