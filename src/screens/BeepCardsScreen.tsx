@@ -1,19 +1,10 @@
-/* eslint-disable react-native/no-inline-styles */
 import React from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
-
-// Define the type for beep card items
-interface BeepCardItem {
-  UUIC: number;
-  balance: number;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
+import { BeepCardItem as BeepCardsModel } from '../models/BeepCardsModel';
 
 // Sample JSON data for beep cards
-const beepCardsData: BeepCardItem[] = [
+const beepCardsData: BeepCardsModel[] = [
   {
     UUIC: 637805000000000,
     balance: 4914,
@@ -56,19 +47,37 @@ const BeepCardsScreen = () => {
   };
 
   // Render item for FlatList
-  const renderItem = ({ item }: { item: BeepCardItem }) => {
+  const renderItem = ({ item }: { item: BeepCardsModel}) => {
     const latestTimestamp = getLatestTimestamp(item.createdAt, item.updatedAt);
     const timestampText = latestTimestamp === item.createdAt ? 'Created at' : 'Last Updated';
 
     return (
       <TouchableOpacity style={styles.cardContainer}>
-        <FontAwesome5 name="credit-card" size={24} color="#FFFFFF" style={styles.icon} />
+        <View style={styles.cardHeader}>
+          <FontAwesome5 name="credit-card" size={18} color="#333" style={styles.icon} />
+          <Text style={styles.cardHeaderText}>Card Details</Text>
+          <FontAwesome5 name="trash" size={18} color="#999" style={styles.trashIcon} />
+        </View>
         <View style={styles.cardDetails}>
-          <Text style={styles.cardName}>{item.UUIC}</Text>
-          <Text style={styles.cardBalance}>Balance: ${item.balance}</Text>
-          <Text style={styles.timestamp}>{timestampText}: {formatDate(latestTimestamp)}</Text>
+          <View style={styles.row}>
+            <FontAwesome5 name="id-card" size={16} color="#FFFFFF" style={styles.icon} />
+            <Text style={styles.cardName}>UUID: {item.UUIC}</Text>
+          </View>
+          <View style={styles.row}>
+            <FontAwesome5 name="dollar-sign" size={20} color="#FFFFFF" style={styles.icon} />
+            <Text style={styles.cardBalance}>Balance: ${item.balance}</Text>
+          </View>
+          <View style={styles.row}>
+            <FontAwesome5 name="calendar-alt" size={16} color="#FFFFFF" style={styles.icon} />
+            <Text style={styles.timestamp}>
+              {timestampText}: {formatDate(latestTimestamp)}
+            </Text>
+          </View>
           <View style={styles.nestedBadge}>
-            <View style={[styles.badge, { backgroundColor: item.isActive ? '#00E676' : '#FF1744' }]} />
+            <View
+              // eslint-disable-next-line react-native/no-inline-styles
+              style={[styles.badge, { backgroundColor: item.isActive ? '#00E676' : '#FF1744' }]}
+            />
             <Text style={styles.badgeText}>{getOnboardStatus(item.isActive)}</Text>
           </View>
         </View>
@@ -76,15 +85,27 @@ const BeepCardsScreen = () => {
     );
   };
 
+  // Render message when no beep cards are found
+  const renderEmptyMessage = () => (
+    <View style={styles.emptyContainer}>
+      <Text style={styles.emptyText}>
+        No Beep Cards Found.{'\n'}Click Add Button to Add Beep Cards.
+      </Text>
+    </View>
+  );
 
   return (
     <View style={styles.container}>
-      <FlatList
-        data={beepCardsData}
-        renderItem={renderItem}
-        keyExtractor={(item, index) => index.toString()}
-        contentContainerStyle={styles.list}
-      />
+      {beepCardsData.length > 0 ? (
+        <FlatList
+          data={beepCardsData}
+          renderItem={renderItem}
+          keyExtractor={(item, index) => index.toString()}
+          contentContainerStyle={styles.list}
+        />
+      ) : (
+        renderEmptyMessage()
+      )}
     </View>
   );
 };
@@ -95,25 +116,35 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF8E1', // Cream background color
   },
   list: {
-    padding: 20,
+    flexGrow: 1,
+    paddingVertical: 20,
+    paddingHorizontal: 20,
   },
   cardContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
     backgroundColor: '#FFA726', // Orange lighter shade background color
     padding: 15,
     borderRadius: 10,
     marginBottom: 15,
   },
-  icon: {
-    marginRight: 15,
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  cardHeaderText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333', // Dark text color
+  },
+  trashIcon: {
+    marginLeft: 'auto', // Push the trash icon to the right
   },
   cardDetails: {
     flex: 1,
   },
   cardName: {
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: 16,
     color: '#FFFFFF', // White text color
     marginBottom: 5,
   },
@@ -123,7 +154,7 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   timestamp: {
-    fontSize: 14,
+    fontSize: 16,
     color: '#FFFFFF', // White text color
     marginBottom: 5,
   },
@@ -145,6 +176,25 @@ const styles = StyleSheet.create({
     color: '#FFFFFF', // White text color
     fontWeight: 'bold',
     marginLeft: 5, // Add margin to separate text from circle
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  emptyText: {
+    fontSize: 24,
+    textAlign: 'center',
+    color: '#555', // Dark gray text color
+    lineHeight: 30, // Increase line height for better readability
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  icon: {
+    marginRight: 10,
   },
 });
 

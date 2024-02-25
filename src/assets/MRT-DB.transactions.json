@@ -1,0 +1,84 @@
+[{
+  "_id": {
+    "$oid": "65cb960b0cada9cebb49b7dd"
+  },
+  "UUIC": {
+    "$numberLong": "637805000000000"
+  },
+  "tapIn": true,
+  "initialBalance": "3391",
+  "prevStation": "N/A",
+  "currStation": "ayala",
+  "distance": 0,
+  "fare": 2,
+  "currBalance": 3389,
+  "createdAt": {
+    "$date": "2024-02-13T16:17:15.768Z"
+  },
+  "updatedAt": {
+    "$date": "2024-02-13T16:17:15.768Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "65cb96120cada9cebb49b7f3"
+  },
+  "UUIC": {
+    "$numberLong": "637805000000000"
+  },
+  "tapIn": false,
+  "initialBalance": "3389",
+  "prevStation": "ayala",
+  "currStation": "Ortigas",
+  "distance": 4.93,
+  "fare": 10,
+  "currBalance": 3389,
+  "createdAt": {
+    "$date": "2024-02-13T16:17:22.233Z"
+  },
+  "updatedAt": {
+    "$date": "2024-02-13T16:17:22.233Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "65cd01cdcfbb9c5e0b6d493e"
+  },
+  "UUIC": {
+    "$numberLong": "637805000000000"
+  },
+  "tapIn": false,
+  "initialBalance": "5269",
+  "prevStation": "Ortigas",
+  "currStation": "Buendia",
+  "distance": 0,
+  "fare": 0,
+  "currBalance": 5269,
+  "createdAt": {
+    "$date": "2024-02-14T18:09:17.258Z"
+  },
+  "updatedAt": {
+    "$date": "2024-02-14T18:09:17.258Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "65d37389c3ef2dc1780ef7ca"
+  },
+  "UUIC": {
+    "$numberLong": "637805000000000"
+  },
+  "tapIn": false,
+  "initialBalance": "5169",
+  "prevStation": "ayala",
+  "currStation": "Taft Avenue",
+  "distance": 1.76,
+  "fare": 9,
+  "currBalance": 5169,
+  "createdAt": {
+    "$date": "2024-02-19T15:28:09.705Z"
+  },
+  "updatedAt": {
+    "$date": "2024-02-19T15:28:09.705Z"
+  }
+}]
