@@ -1,3 +1,4 @@
+/* eslint-disable react-native/no-inline-styles */
 import React from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
@@ -18,7 +19,7 @@ const beepCardsData: BeepCardItem[] = [
     balance: 4914,
     isActive: false,
     createdAt: '2024-02-06T20:46:23.172Z',
-    updatedAt: '2024-02-19T16:52:30.917Z',
+    updatedAt: '2024-02-06T20:46:23.172Z',
   },
   {
     UUIC: 637805000000001,
@@ -37,6 +38,12 @@ const beepCardsData: BeepCardItem[] = [
   // Add more beep cards as needed
 ];
 
+// Function to format date
+const formatDate = (dateString: string): string => {
+  const date = new Date(dateString);
+  return date.toLocaleString();
+};
+
 const BeepCardsScreen = () => {
   // Function to determine the latest timestamp
   const getLatestTimestamp = (createdAt: string, updatedAt: string): string => {
@@ -49,20 +56,26 @@ const BeepCardsScreen = () => {
   };
 
   // Render item for FlatList
-  const renderItem = ({ item }: { item: BeepCardItem }) => (
-    <TouchableOpacity style={styles.cardContainer}>
-      <FontAwesome5 name="credit-card" size={24} color="#FFFFFF" style={styles.icon} />
-      <View style={styles.cardDetails}>
-        <Text style={styles.cardName}>{item.UUIC}</Text>
-        <Text style={styles.cardBalance}>Balance: ${item.balance}</Text>
-        <Text style={styles.timestamp}>Last Updated: {getLatestTimestamp(item.createdAt, item.updatedAt)}</Text>
-        <View style={styles.nestedBadge}>
-          <View style={[styles.badge, { backgroundColor: item.isActive ? '#00E676' : '#FF1744' }]} />
-          <Text style={styles.badgeText}>{getOnboardStatus(item.isActive)}</Text>
+  const renderItem = ({ item }: { item: BeepCardItem }) => {
+    const latestTimestamp = getLatestTimestamp(item.createdAt, item.updatedAt);
+    const timestampText = latestTimestamp === item.createdAt ? 'Created at' : 'Last Updated';
+
+    return (
+      <TouchableOpacity style={styles.cardContainer}>
+        <FontAwesome5 name="credit-card" size={24} color="#FFFFFF" style={styles.icon} />
+        <View style={styles.cardDetails}>
+          <Text style={styles.cardName}>{item.UUIC}</Text>
+          <Text style={styles.cardBalance}>Balance: ${item.balance}</Text>
+          <Text style={styles.timestamp}>{timestampText}: {formatDate(latestTimestamp)}</Text>
+          <View style={styles.nestedBadge}>
+            <View style={[styles.badge, { backgroundColor: item.isActive ? '#00E676' : '#FF1744' }]} />
+            <Text style={styles.badgeText}>{getOnboardStatus(item.isActive)}</Text>
+          </View>
         </View>
-      </View>
-    </TouchableOpacity>
-  );
+      </TouchableOpacity>
+    );
+  };
+
 
   return (
     <View style={styles.container}>
