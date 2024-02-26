@@ -1,7 +1,8 @@
 
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
+import { BeepCardItem as BeepCardsModel } from '../models/BeepCardsModel';
 import { TransactionItem as TransactionModel } from '../models/TransactionsModel';
 
 // Sample JSON data for transactions
@@ -26,7 +27,8 @@ function randomDate(start: Date, end: Date) {
   return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
 }
 
-const TransactionScreen = () => {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const TransactionScreen = ({ beepCards }: { beepCards: BeepCardsModel[] }) => {
   const [transactionsData, setTransactionsData] = useState<TransactionModel[]>([]);
   const [expandedGroups, setExpandedGroups] = useState<{ [key: string]: boolean }>({});
 

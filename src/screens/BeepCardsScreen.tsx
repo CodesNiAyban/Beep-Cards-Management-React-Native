@@ -1,46 +1,63 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
-import { BeepCardItem as BeepCardsModel } from '../models/BeepCardsModel';
 import ConfirmationModal from '../components/ConfirmationModal';
-import { fetchBeepCard } from '../network/BeepCardManagerAPI'; // Import the fetchBeepCard function from your API file
+import { BeepCardItem as BeepCardsModel } from '../models/BeepCardsModel';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { deleteUser } from '../network/BeepCardManagerAPI';
 
-const BeepCardsScreen = () => {
-  const [beepCards, setBeepCards] = useState<BeepCardsModel[]>([]); // State to store fetched beep cards
+const BeepCardsScreen = ({ beepCards }: { beepCards: BeepCardsModel[] }) => {
   const [selectedBeepCard, setSelectedBeepCard] = useState<BeepCardsModel | null>(null);
   const [isConfirmationModalVisible, setIsConfirmationModalVisible] = useState(false);
+  const [deviceID, setDeviceID] = useState<string | null>(null); // State to store device ID
+  const [filteredBeepCards, setFilteredBeepCards] = useState<BeepCardsModel[]>([]); // State to store filtered beep cards
 
+  // Fetch the deviceId from AsyncStorage on component mount
   useEffect(() => {
-    // Fetch beep cards from API when component mounts
-    const fetchBeepCardsData = async () => {
-      try {
-        const data = await fetchBeepCard();
-        setBeepCards(data);
-      } catch (error) {
-        console.error('Error fetching beep cards:', error);
-        // Handle error if needed
+    const getDeviceId = async () => {
+      const id = await AsyncStorage.getItem('deviceId');
+      setDeviceID(id);
+    };
+    getDeviceId();
+  }, []);
+
+  // Filter beepCards based on the userId matching deviceId
+  useEffect(() => {
+    const filterBeepCards = async () => {
+      if (deviceID) {
+        const filteredResults = await Promise.all(beepCards.map(async beepCard => {
+          if (await beepCard.userID === deviceID) {
+            return beepCard;
+          }
+          return null; // Ensure we return null for non-matching cards
+        }));
+        const filteredCards = filteredResults.filter(card => card !== null) as BeepCardsModel[]; // Filter out null values
+        setFilteredBeepCards(filteredCards);
       }
     };
+    filterBeepCards();
+  }, [deviceID, beepCards]);
 
-    fetchBeepCardsData();
-
-    // Clean up function
-    return () => {
-      // Perform any cleanup if needed
-    };
-  }, []); // Empty dependency array ensures the effect runs only once on mount
 
   const handleTrashPress = (item: BeepCardsModel) => {
     setSelectedBeepCard(item);
     setIsConfirmationModalVisible(true);
   };
 
-  const handleConfirmDelete = () => {
-    // Logic to delete the selected beep card
-    // Once the deletion is done, you can close the modal and update the beepCards array
-    // For demonstration purposes, let's just log the action
-    console.log('Beep card deleted:', selectedBeepCard?.UUIC);
-    setIsConfirmationModalVisible(false);
+  // Function to handle deletion of the selected beep card
+  const handleConfirmDelete = async () => {
+    if (selectedBeepCard) {
+      try {
+        // Call the deleteUser function from the API file to delete the selected beep card
+        await deleteUser(selectedBeepCard._id);
+        console.log('Beep card deleted:', selectedBeepCard?.UUIC);
+        setIsConfirmationModalVisible(false);
+        // Assuming you have a function to fetch updated beep cards, you can call it here to update the list
+      } catch (error) {
+        console.error('Error deleting beep card:', error);
+        // Handle error as needed
+      }
+    }
   };
 
   const formatDate = (dateString: string): string => {
@@ -91,9 +108,9 @@ const BeepCardsScreen = () => {
 
   return (
     <View style={styles.container}>
-      {beepCards.length > 0 ? (
+      {filteredBeepCards.length > 0 ? (
         <FlatList
-          data={beepCards}
+          data={filteredBeepCards}
           renderItem={renderItem}
           keyExtractor={(item, index) => index.toString()}
           contentContainerStyle={styles.list}

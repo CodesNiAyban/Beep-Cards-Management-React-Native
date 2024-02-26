@@ -1,15 +1,18 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { useNavigation } from '@react-navigation/native'; // Import useNavigation hook
+import { useNavigation } from '@react-navigation/native';
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
-import AddBeepCardModal from '../components/AddBeepCardModal'; // Import AddBeepCardModal component
-import BeepCardsScreen from '../screens/BeepCardsScreen'; // Import BeepCardsScreen component
-import TransactionsScreen from '../screens/TransactionsScreen'; // Import TransactionsScreen component
+import AddBeepCardModal from '../components/AddBeepCardModal';
+import { BeepCardItem as BeepCardsModel } from '../models/BeepCardsModel';
+import { fetchBeepCard } from '../network/BeepCardManagerAPI';
+import BeepCardsScreen from '../screens/BeepCardsScreen';
+import TransactionsScreen from '../screens/TransactionsScreen';
+import ToastManager, { Toast } from 'toastify-react-native';
 
 const Tab = createBottomTabNavigator();
 
-const screenContainerStyle = { flex: 1 }; // Style for the container view
+const screenContainerStyle = { flex: 1 };
 
 const styles = StyleSheet.create({
   addButtonContainer: {
@@ -22,7 +25,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#FF6F00', // Orange background color
+    backgroundColor: '#FF6F00',
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
@@ -36,7 +39,6 @@ const styles = StyleSheet.create({
   },
 });
 
-// Define the type for the onPress prop
 interface AddBeepCardButtonProps {
   onPress: () => void;
 }
@@ -50,24 +52,50 @@ const AddBeepCardButton: React.FC<AddBeepCardButtonProps> = ({ onPress }) => (
 );
 
 const MainTabNavigator = () => {
-  const [isModalVisible, setIsModalVisible] = useState(false); // State to manage modal visibility
-  const navigation = useNavigation(); // Access navigation object
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [beepCards, setBeepCards] = useState<BeepCardsModel[]>([]);
+  const navigation = useNavigation();
 
   const toggleModal = () => {
-    setIsModalVisible(!isModalVisible); // Toggle modal visibility
+    setIsModalVisible(!isModalVisible);
   };
 
-  // Disable going back when the component mounts
   useEffect(() => {
     const unsubscribe = navigation.addListener('beforeRemove', (e) => {
-      e.preventDefault(); // Prevent default navigation action
+      e.preventDefault();
     });
 
-    return unsubscribe; // Clean up event listener
+    return unsubscribe;
   }, [navigation]);
+
+  useEffect(() => {
+    const fetchBeepCardsData = async () => {
+      try {
+        const data = await fetchBeepCard();
+        setBeepCards(data);
+      } catch (error) {
+        console.error('Error fetching beep cards:', error);
+      }
+    };
+
+    fetchBeepCardsData();
+
+    return () => {
+      // Clean up function if needed
+    };
+  }, [beepCards]);
+
+  const handleSuccessToast = (newBeepCard: BeepCardsModel) => {
+    // Update the beepCards state with the newly added beep card
+    setBeepCards(prevBeepCards => [...prevBeepCards, newBeepCard]);
+
+    // Display a toast indicating the successful addition
+    Toast.success('Beep card ' + newBeepCard.UUIC + ' added successfully!', 'top');
+  };
 
   return (
     <View style={screenContainerStyle}>
+      <ToastManager />
       <Tab.Navigator
         screenOptions={({ route }) => ({
           // eslint-disable-next-line react/no-unstable-nested-components
@@ -80,10 +108,10 @@ const MainTabNavigator = () => {
             }
             return <FontAwesome5 name={iconName} size={size} color={color} />;
           },
-          tabBarActiveTintColor: '#FF6F00', // Orange active icon color
-          tabBarInactiveTintColor: '#757575', // Gray inactive icon color
+          tabBarActiveTintColor: '#FF6F00',
+          tabBarInactiveTintColor: '#757575',
           tabBarStyle: {
-            backgroundColor: '#ffffff', // White background color
+            backgroundColor: '#ffffff',
             borderTopWidth: 1,
             borderTopColor: '#eeeeee',
           },
@@ -95,23 +123,30 @@ const MainTabNavigator = () => {
       >
         <Tab.Screen
           name="BeepCards"
-          component={BeepCardsScreen}
           options={{
             tabBarLabel: 'Beep Cards',
-            headerShown: false, // Hide header
+            headerShown: false,
           }}
-        />
+        >
+          {() => <BeepCardsScreen beepCards={beepCards} />}
+        </Tab.Screen>
         <Tab.Screen
           name="Transactions"
-          component={TransactionsScreen}
           options={{
             tabBarLabel: 'Transactions',
-            headerShown: false, // Hide header
+            headerShown: false,
           }}
-        />
+        >
+          {() => <TransactionsScreen beepCards={beepCards} />}
+        </Tab.Screen>
       </Tab.Navigator>
       <AddBeepCardButton onPress={toggleModal} />
-      <AddBeepCardModal isVisible={isModalVisible} onClose={toggleModal} />
+      <AddBeepCardModal
+        isVisible={isModalVisible}
+        onClose={toggleModal}
+        beepCards={beepCards}
+        onSuccess={handleSuccessToast} // Pass the onSuccess callback here
+      />
     </View>
   );
 };

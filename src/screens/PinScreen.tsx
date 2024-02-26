@@ -20,6 +20,7 @@ const VerifyPinScreen: React.FC<Props> = ({ navigation }) => {
                     setStoredPin(pin);
                 }
             } catch (retrieveError) {
+                Toast.error('Error retrieving PIN:', 'top');
                 console.error('Error retrieving PIN:', retrieveError);
             }
         };
@@ -31,8 +32,9 @@ const VerifyPinScreen: React.FC<Props> = ({ navigation }) => {
         if (text.length === 4) {
             try {
                 const savedPin = await AsyncStorage.getItem('pin');
-                if (text === savedPin) {
-                    console.log('PIN is correct');
+                const deviceIdCheck = await AsyncStorage.getItem('deviceId');
+                if (deviceIdCheck && text === savedPin) {
+                    console.log('PIN is correct with ' + deviceIdCheck);
                     navigation.navigate('Main');
                 } else {
                     Toast.error('Incorrect PIN.', 'top');
@@ -47,7 +49,8 @@ const VerifyPinScreen: React.FC<Props> = ({ navigation }) => {
     const handleDeletePin = async () => {
         try {
             await AsyncStorage.removeItem('pin');
-            console.log('PIN deleted successfully');
+            await AsyncStorage.removeItem('deviceId');
+            console.log('PIN & deviceId deleted successfully');
         } catch (deleteError) {
             console.error('Error deleting PIN:', deleteError);
         }

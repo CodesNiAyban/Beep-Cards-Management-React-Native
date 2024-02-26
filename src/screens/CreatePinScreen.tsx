@@ -1,3 +1,4 @@
+import DeviceInfo from 'react-native-device-info';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NavigationProp } from '@react-navigation/native';
 import React, { useEffect, useState } from 'react';
@@ -16,7 +17,8 @@ const CreatePinScreen: React.FC<Props> = ({ navigation }) => {
         const checkPinExists = async () => {
             try {
                 const pinCheck = await AsyncStorage.getItem('pin');
-                if (pinCheck) {
+                const deviceIdCheck = await AsyncStorage.getItem('deviceId');
+                if (pinCheck && deviceIdCheck) {
                     navigation.navigate('Pin'); // Navigate to PinScreen if PIN exists
                 }
             } catch (error) {
@@ -40,7 +42,9 @@ const CreatePinScreen: React.FC<Props> = ({ navigation }) => {
     const handlePinCreation = async () => {
         if (pin === verifyPin) {
             try {
+                const deviceId = DeviceInfo.getAndroidId(); // Get Android ID
                 await AsyncStorage.setItem('pin', pin);
+                await AsyncStorage.setItem('deviceId', await deviceId); // Save Android ID
                 navigation.navigate('Main');
             } catch (error) {
                 console.error('Error creating PIN file:', error);

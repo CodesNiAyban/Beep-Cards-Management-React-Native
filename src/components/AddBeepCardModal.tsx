@@ -1,20 +1,57 @@
+import AsyncStorage from '@react-native-async-storage/async-storage'; // Import AsyncStorage
 import React, { useState } from 'react';
-import { Modal, View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import ToastManager, { Toast } from 'toastify-react-native';
+import { BeepCardItem as BeepCardsModel } from '../models/BeepCardsModel';
+import { createNewBeepCardUser } from '../network/BeepCardManagerAPI'; // Import updateBeepCardById function
 
 interface AddBeepCardModalProps {
     isVisible: boolean;
     onClose: () => void;
+    beepCards: BeepCardsModel[]; // Pass beepCards as prop from MainTabNavigator
+    onSuccess: (newBeepCard: BeepCardsModel) => void; // Callback for successful addition
 }
 
-const AddBeepCardModal: React.FC<AddBeepCardModalProps> = ({ isVisible, onClose }) => {
+const AddBeepCardModal: React.FC<AddBeepCardModalProps> = ({ isVisible, onClose, beepCards, onSuccess }) => {
     const [uuid, setUuid] = useState('');
 
-    const handleAddPress = () => {
-        const beepCardUuid = '637805' + uuid;
-        console.log('Adding beep card with UUID:', beepCardUuid);
-        onClose();
-        setUuid('');
+    const handleAddPress = async () => {
+        try {
+            // Retrieve device ID from AsyncStorage
+            const deviceIdCheck = await AsyncStorage.getItem('deviceId');
+
+            if (!deviceIdCheck) {
+                // Handle the case where deviceIdCheck is null
+                console.error('Device ID is null');
+                return;
+            }
+
+            // Find the beep card by UUIC input
+            const selectedBeepCard = beepCards.find(card => String(card.UUIC) === '637805' + uuid); // Convert uuid to string before comparison
+
+            if (!selectedBeepCard) {
+                // Handle the case where the beep card with the specified UUIC is not found
+                console.error('Beep card not found');
+                return;
+            }
+
+            // Call updateBeepCardById to update the beep card by _id
+            await createNewBeepCardUser(deviceIdCheck, { _id: selectedBeepCard._id });
+
+            // Show success notification
+            Toast.success('Beep Card Updated', 'top');
+
+            // Close the modal and reset the input
+            onSuccess(selectedBeepCard);
+            onClose();
+            setUuid('');
+        } catch (error) {
+            // Show error notification
+            Toast.error('Failed to update beep card. Please try again.', 'top');
+            console.error('Error updating beep card:', error);
+        }
     };
+
 
     const handleClose = () => {
         onClose();
@@ -67,10 +104,10 @@ const AddBeepCardModal: React.FC<AddBeepCardModalProps> = ({ isVisible, onClose 
                     </View>
                 </TouchableOpacity>
             </View>
+            <ToastManager />
         </Modal>
     );
 };
-
 const styles = StyleSheet.create({
     centeredView: {
         flex: 1,
