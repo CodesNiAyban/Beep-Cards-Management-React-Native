@@ -9,10 +9,11 @@ interface AddBeepCardModalProps {
     isVisible: boolean;
     onClose: () => void;
     beepCards: BeepCardsModel[]; // Pass beepCards as prop from MainTabNavigator
+    setBeepCards: React.Dispatch<React.SetStateAction<BeepCardsModel[]>>;
     onSuccess: (newBeepCard: BeepCardsModel) => void; // Callback for successful addition
 }
 
-const AddBeepCardModal: React.FC<AddBeepCardModalProps> = ({ isVisible, onClose, beepCards, onSuccess }) => {
+const AddBeepCardModal: React.FC<AddBeepCardModalProps> = ({ isVisible, onClose, beepCards, setBeepCards, onSuccess }) => {
     const [uuid, setUuid] = useState('');
 
     const handleAddPress = async () => {
@@ -38,20 +39,30 @@ const AddBeepCardModal: React.FC<AddBeepCardModalProps> = ({ isVisible, onClose,
             // Call updateBeepCardById to update the beep card by _id
             await createNewBeepCardUser(deviceIdCheck, { _id: selectedBeepCard._id });
 
-            // Show success notification
-            Toast.success('Beep Card Updated', 'top');
+            // Replace the old beep card with the new one
+            setBeepCards((prevBeepCards) => {
+                const updatedBeepCards = prevBeepCards.map((beepCard) => {
+                    if (beepCard._id === selectedBeepCard._id) {
+                        return selectedBeepCard; // Replace the old beep card with the new one
+                    }
+                    return beepCard;
+                }) as BeepCardsModel[]; // Cast the array to BeepCardsModel[]
+                return updatedBeepCards;
+            });
 
             // Close the modal and reset the input
-            onSuccess(selectedBeepCard);
+            onSuccess(selectedBeepCard); // Pass the newly added beep card to the onSuccess callback
             onClose();
             setUuid('');
+
+            // Display a success toast
+            Toast.success('Beep card ' + selectedBeepCard.UUIC + ' updated successfully!', 'top');
         } catch (error) {
             // Show error notification
             Toast.error('Failed to update beep card. Please try again.', 'top');
             console.error('Error updating beep card:', error);
         }
     };
-
 
     const handleClose = () => {
         onClose();

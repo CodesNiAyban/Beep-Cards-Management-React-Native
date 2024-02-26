@@ -3,6 +3,8 @@ import { TransactionItem as Transaction } from '../models/TransactionsModel';
 import { fetchData } from './Fetcher';
 
 const DEVELOPMENT_URL = process.env.DEVELOPMENT_URL;
+// const DEVELOPMENT_URL = 'http://10.200.55.57:5000';
+
 
 export async function fetchBeepCard(): Promise<BeepCard[]> {
     console.log(`${DEVELOPMENT_URL}/api/beepCardManager`);

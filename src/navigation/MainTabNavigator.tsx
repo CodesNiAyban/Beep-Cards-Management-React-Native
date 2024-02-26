@@ -69,6 +69,7 @@ const MainTabNavigator = () => {
   }, [navigation]);
 
   useEffect(() => {
+    console.log("natawag si call beepcard")
     const fetchBeepCardsData = async () => {
       try {
         const data = await fetchBeepCard();
@@ -83,14 +84,10 @@ const MainTabNavigator = () => {
     return () => {
       // Clean up function if needed
     };
-  }, [beepCards]);
+  }, [navigation, isModalVisible, setIsModalVisible, setBeepCards]);
 
-  const handleSuccessToast = (newBeepCard: BeepCardsModel) => {
-    // Update the beepCards state with the newly added beep card
-    setBeepCards(prevBeepCards => [...prevBeepCards, newBeepCard]);
-
-    // Display a toast indicating the successful addition
-    Toast.success('Beep card ' + newBeepCard.UUIC + ' added successfully!', 'top');
+  const handleBeepCardSaved = (newBeepCard: BeepCardsModel) => {
+    Toast.success('Beep card ' + newBeepCard.UUIC + ' replaced successfully!', 'top');
   };
 
   return (
@@ -128,7 +125,7 @@ const MainTabNavigator = () => {
             headerShown: false,
           }}
         >
-          {() => <BeepCardsScreen beepCards={beepCards} />}
+          {() => <BeepCardsScreen beepCards={beepCards} setBeepCards={setBeepCards} />}
         </Tab.Screen>
         <Tab.Screen
           name="Transactions"
@@ -137,7 +134,7 @@ const MainTabNavigator = () => {
             headerShown: false,
           }}
         >
-          {() => <TransactionsScreen beepCards={beepCards} />}
+          {() => <TransactionsScreen beepCards={beepCards} setBeepCards={setBeepCards} />}
         </Tab.Screen>
       </Tab.Navigator>
       <AddBeepCardButton onPress={toggleModal} />
@@ -145,7 +142,8 @@ const MainTabNavigator = () => {
         isVisible={isModalVisible}
         onClose={toggleModal}
         beepCards={beepCards}
-        onSuccess={handleSuccessToast} // Pass the onSuccess callback here
+        setBeepCards={setBeepCards}
+        onSuccess={handleBeepCardSaved}
       />
     </View>
   );

@@ -27,8 +27,13 @@ function randomDate(start: Date, end: Date) {
   return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
 }
 
+interface TransactionScreenProps {
+  beepCards: BeepCardsModel[];
+  setBeepCards: React.Dispatch<React.SetStateAction<BeepCardsModel[]>>;
+}
+
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const TransactionScreen = ({ beepCards }: { beepCards: BeepCardsModel[] }) => {
+const TransactionScreen : React.FC<TransactionScreenProps> = ({ beepCards, setBeepCards }) => {
   const [transactionsData, setTransactionsData] = useState<TransactionModel[]>([]);
   const [expandedGroups, setExpandedGroups] = useState<{ [key: string]: boolean }>({});
 

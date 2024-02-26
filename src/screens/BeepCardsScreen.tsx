@@ -6,7 +6,12 @@ import { BeepCardItem as BeepCardsModel } from '../models/BeepCardsModel';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { deleteUser } from '../network/BeepCardManagerAPI';
 
-const BeepCardsScreen = ({ beepCards }: { beepCards: BeepCardsModel[] }) => {
+interface BeepCardsScreenProps {
+  beepCards: BeepCardsModel[];
+  setBeepCards: React.Dispatch<React.SetStateAction<BeepCardsModel[]>>;
+}
+
+const BeepCardsScreen: React.FC<BeepCardsScreenProps> = ({ beepCards, setBeepCards }) => {
   const [selectedBeepCard, setSelectedBeepCard] = useState<BeepCardsModel | null>(null);
   const [isConfirmationModalVisible, setIsConfirmationModalVisible] = useState(false);
   const [deviceID, setDeviceID] = useState<string | null>(null); // State to store device ID
@@ -50,6 +55,11 @@ const BeepCardsScreen = ({ beepCards }: { beepCards: BeepCardsModel[] }) => {
       try {
         // Call the deleteUser function from the API file to delete the selected beep card
         await deleteUser(selectedBeepCard._id);
+
+        // Update the beepCards state by filtering out the deleted card
+        const updatedBeepCards = beepCards.filter(card => card._id !== selectedBeepCard._id);
+        setBeepCards(updatedBeepCards);
+
         console.log('Beep card deleted:', selectedBeepCard?.UUIC);
         setIsConfirmationModalVisible(false);
         // Assuming you have a function to fetch updated beep cards, you can call it here to update the list
@@ -59,6 +69,7 @@ const BeepCardsScreen = ({ beepCards }: { beepCards: BeepCardsModel[] }) => {
       }
     }
   };
+
 
   const formatDate = (dateString: string): string => {
     const date = new Date(dateString);
@@ -101,7 +112,7 @@ const BeepCardsScreen = ({ beepCards }: { beepCards: BeepCardsModel[] }) => {
   const renderEmptyMessage = () => (
     <View style={styles.emptyContainer}>
       <Text style={styles.emptyText}>
-        No Beep Cards Found.{'\n'}Click Add Button to Add Beep Cards.
+        No Beep Cards Found.{'\n'}Click Add Button to Add Beep Card.
       </Text>
     </View>
   );
