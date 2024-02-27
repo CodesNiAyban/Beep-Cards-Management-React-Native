@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'; // Import AsyncStorage
 import React, { useState } from 'react';
-import { Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Modal, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Text, TextInput } from 'react-native-paper';
 import ToastManager, { Toast } from 'toastify-react-native';
 import { BeepCardItem as BeepCardsModel } from '../models/BeepCardsModel';
 import { createNewBeepCardUser } from '../network/BeepCardManagerAPI'; // Import updateBeepCardById function
@@ -84,7 +85,7 @@ const AddBeepCardModal: React.FC<AddBeepCardModalProps> = ({ isVisible, onClose,
                 >
                     <View style={styles.modalContainer}>
                         <View style={styles.modalContent}>
-                            <Text style={styles.modalTitle}>Add Beep Card</Text>
+                            <Text style={styles.modalTitle}>Add Beep Card™</Text>
                             <View style={styles.inputContainer}>
                                 <View style={styles.badge}>
                                     <Text style={styles.badgeText}>637805</Text>
@@ -136,9 +137,9 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     modalContainer: {
-        backgroundColor: '#FFF',
+        backgroundColor: '#F2EFE5',
         borderRadius: 10,
-        padding: 20,
+        padding: 15,
         alignItems: 'center',
         elevation: 5,
         width: '80%',
@@ -156,25 +157,27 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         marginBottom: 20,
+        borderColor: '#FF6F00', // Add border color
+        borderWidth: 5, // Add border width
+        borderRadius: 5, // Add border radius
+        paddingHorizontal: 10, // Add horizontal padding
     },
     badge: {
         backgroundColor: '#FF6F00',
         paddingVertical: 10,
         paddingHorizontal: 20,
         borderRadius: 20,
-        marginRight: 10,
     },
     badgeText: {
+        fontWeight: 'bold',
         color: 'white',
-        fontSize: 18,
+        fontSize: 14,
     },
     input: {
         flex: 1,
         height: 45,
-        borderColor: '#FF6F00',
-        borderWidth: 1,
-        borderRadius: 5,
-        paddingHorizontal: 10,
+        color: '#333', // Change input text color
+        marginRight: 10, // Add margin to separate badge from input
     },
     inputText: {
         fontSize: 16,

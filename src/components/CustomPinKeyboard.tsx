@@ -92,13 +92,13 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: '#DDDDDD', // Default color for empty circle
-    borderWidth: 1,
+    backgroundColor: '#FEFCF3', // Default color for empty circle
+    borderWidth: 0.5,
     borderColor: '#000',
     margin: 5,
   },
   circleFilled: {
-    backgroundColor: '#FF6F00', // Orange color for filled circle
+    backgroundColor: '#65647C', // Orange color for filled circle
   },
   row: {
     flexDirection: 'row',
@@ -118,6 +118,16 @@ const styles = StyleSheet.create({
     height: 80,
     margin: 5,
     borderRadius: 40,
+    borderWidth: 2,
+    borderColor: '#FFF', // Outline color
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   buttonText: {
     fontSize: 24,

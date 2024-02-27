@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, Modal, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Modal, TouchableOpacity, StyleSheet } from 'react-native';
+import { Text } from 'react-native-paper';
 
 interface ConfirmationModalProps {
     isVisible: boolean;

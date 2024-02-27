@@ -133,12 +133,12 @@ const TransactionScreen : React.FC<TransactionScreenProps> = ({ beepCards, setBe
 
 const styles = StyleSheet.create({
   scrollContainer: {
-    backgroundColor: '#FFEBCD',
+    backgroundColor: '#EDF3FF',
     flexGrow: 1,
   },
   container: {
     flex: 1,
-    backgroundColor: '#FFEBCD',
+    backgroundColor: '#EDF3FF',
     padding: 20,
   },
   transactionItem: {

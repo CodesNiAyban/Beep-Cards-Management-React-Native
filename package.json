@@ -19,9 +19,12 @@
     "react-native-device-info": "^10.13.0",
     "react-native-dotenv": "^3.4.10",
     "react-native-gesture-handler": "^2.15.0",
+    "react-native-linear-gradient": "^2.8.3",
+    "react-native-paper": "^5.12.3",
     "react-native-pin-view": "^3.0.3",
     "react-native-safe-area-context": "^4.9.0",
     "react-native-screens": "^3.29.0",
+    "react-native-svg": "^15.0.0",
     "react-native-vector-icons": "^10.0.3",
     "toastify-react-native": "^5.0.0"
   },
