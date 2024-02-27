@@ -3,16 +3,26 @@ import { TransactionItem as Transaction } from '../models/TransactionsModel';
 import { fetchData } from './Fetcher';
 
 const DEVELOPMENT_URL = process.env.DEVELOPMENT_URL;
-// const DEVELOPMENT_URL = 'http://10.200.55.57:5000';
+// const DEVELOPMENT_URL = 'http://localhost:5000';
 
 
-export async function fetchBeepCard(): Promise<BeepCard[]> {
-    console.log(`${DEVELOPMENT_URL}/api/beepCardManager`);
-    const response = await fetchData(`${DEVELOPMENT_URL}/api/beepCardManager`, {
-        method: 'GET',
-    });
+export async function fetchBeepCard(userId: string): Promise<BeepCard[]> {
+    console.log(`${DEVELOPMENT_URL}/api/beepCardManager/${userId}`);
+    try {
+        const response = await fetchData(`${DEVELOPMENT_URL}/api/beepCardManager/${userId}`, {
+            method: 'GET',
+        });
 
-    return response.json();
+        if (!response.ok) {
+            throw new Error(`Error fetching beep cards: ${response.statusText}`);
+        }
+
+        return response.json();
+    } catch (error) {
+        console.error('Error fetching beep cards:', error);
+        throw error; // Rethrow the error for the caller to handle
+    }
+
 }
 
 export async function createNewBeepCardUser(userID: string, beepCardId: Partial<BeepCardItem>): Promise<BeepCardItem | null> {
@@ -38,15 +48,15 @@ export async function createNewBeepCardUser(userID: string, beepCardId: Partial<
 }
 
 
-export async function deleteUser(beepCardId: string): Promise<void> {
+export async function deleteUser(UUID: number): Promise<void> {
     try {
-        const response = await fetchData(`${DEVELOPMENT_URL}/api/beepCardManager/${beepCardId}`, {
+        const response = await fetchData(`${DEVELOPMENT_URL}/api/beepCardManager/${UUID}`, {
             method: 'DELETE',
         });
 
         if (response.status === 404) {
             // Beep card not found
-            console.warn('Beep card not found:', beepCardId);
+            console.warn('Beep card not found:', UUID);
         } else if (!response.ok) {
             // Handle other errors if needed
             console.error('Error deleting beep card:', response.statusText);

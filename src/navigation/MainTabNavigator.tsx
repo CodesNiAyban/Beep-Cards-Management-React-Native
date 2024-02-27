@@ -1,10 +1,9 @@
 /* eslint-disable react/no-unstable-nested-components */
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { useNavigation } from '@react-navigation/native';
+import { NavigationProp, ParamListBase, useNavigation } from '@react-navigation/native';
 import React, { useEffect, useState } from 'react';
 import { Image, StyleSheet, TouchableOpacity, View } from 'react-native';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
-import AddBeepCardModal from '../components/AddBeepCardModal';
 import { BeepCardItem as BeepCardsModel } from '../models/BeepCardsModel';
 import { fetchBeepCard } from '../network/BeepCardManagerAPI';
 import BeepCardsScreen from '../screens/BeepCardsScreen';
@@ -12,8 +11,9 @@ import TransactionsScreen from '../screens/TransactionsScreen';
 import TapScreen from '../screens/TapScreen';
 import AccountScreen from '../screens/AccountScreen';
 import HomeScreen from '../screens/HomeScreen';
-import ToastManager, { Toast } from 'toastify-react-native';
 import { Text } from 'react-native-paper';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import DeviceInfo from 'react-native-device-info';
 
 const Tab = createBottomTabNavigator();
 
@@ -56,10 +56,12 @@ const styles = StyleSheet.create({
 });
 
 interface AddBeepCardButtonProps {
+  navigation: NavigationProp<any>;
   onPress: () => void;
 }
 
-const AddBeepCardButton: React.FC<AddBeepCardButtonProps> = ({ onPress }) => (
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const AddBeepCardButton: React.FC<AddBeepCardButtonProps> = ({ onPress, navigation }) => (
   <TouchableOpacity style={styles.addButtonContainer} onPress={onPress}>
     <View style={styles.addButton}>
       <Image source={require('../assets/circle_button_image.png')} style={styles.circleButtonImage} />
@@ -70,10 +72,10 @@ const AddBeepCardButton: React.FC<AddBeepCardButtonProps> = ({ onPress }) => (
 const MainTabNavigator = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [beepCards, setBeepCards] = useState<BeepCardsModel[]>([]);
-  const navigation = useNavigation();
+  const navigation = useNavigation<NativeStackNavigationProp<ParamListBase>>();
 
-  const toggleModal = () => {
-    setIsModalVisible(!isModalVisible);
+  const showAddBeepCardScreen = () => {
+    navigation.navigate('AddBeepCard');
   };
 
   useEffect(() => {
@@ -87,7 +89,8 @@ const MainTabNavigator = () => {
   useEffect(() => {
     const fetchBeepCardsData = async () => {
       try {
-        const data = await fetchBeepCard();
+        const androidID = await DeviceInfo.getAndroidId();
+        const data = await fetchBeepCard(androidID);
         setBeepCards(data);
       } catch (error) {
         console.error('Error fetching beep cards:', error);
@@ -95,19 +98,10 @@ const MainTabNavigator = () => {
     };
 
     fetchBeepCardsData();
-
-    return () => {
-      // Clean up function if needed
-    };
   }, [navigation, isModalVisible, setIsModalVisible, setBeepCards]);
-
-  const handleBeepCardSaved = (newBeepCard: BeepCardsModel) => {
-    Toast.success('Beep card ' + newBeepCard.UUIC + ' replaced successfully!', 'top');
-  };
 
   return (
     <View style={screenContainerStyle}>
-      <ToastManager />
       <Tab.Navigator
         screenOptions={({ route }) => ({
           tabBarIcon: ({ color, size }) => {
@@ -120,6 +114,8 @@ const MainTabNavigator = () => {
               iconName = 'money-check';
             } else if (route.name === 'Account') {
               iconName = 'user-circle';
+            } else {
+              return;
             }
             return <FontAwesome5 name={iconName} size={size} color={color} />;
           },
@@ -147,7 +143,7 @@ const MainTabNavigator = () => {
           headerTitleAlign: 'center', // Center the header title
           headerRight: route.name === 'MyCard' ? () => (
             // eslint-disable-next-line react-native/no-inline-styles
-            <TouchableOpacity onPress={toggleModal} style={{ marginRight: 10 }}>
+            <TouchableOpacity onPress={showAddBeepCardScreen} style={{ marginRight: 10 }}>
               <Text style={styles.headerAddBeepCard}>Add</Text>
             </TouchableOpacity>
           ) : undefined, // Hide button for other screens
@@ -200,14 +196,7 @@ const MainTabNavigator = () => {
         />
       </Tab.Navigator>
 
-      <AddBeepCardButton onPress={toggleModal} />
-      <AddBeepCardModal
-        isVisible={isModalVisible}
-        onClose={toggleModal}
-        beepCards={beepCards}
-        setBeepCards={setBeepCards}
-        onSuccess={handleBeepCardSaved}
-      />
+      <AddBeepCardButton onPress={showAddBeepCardScreen} navigation={navigation} />
     </View>
   );
 };

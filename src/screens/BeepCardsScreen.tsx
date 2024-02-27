@@ -1,5 +1,6 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import React, { useEffect, useState } from 'react';
+import { ParamListBase, useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import React, { useState } from 'react';
 import { FlatList, ImageBackground, StyleSheet, TouchableOpacity, View } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { Text } from 'react-native-paper';
@@ -7,9 +8,6 @@ import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import ConfirmationModal from '../components/ConfirmationModal';
 import { BeepCardItem as BeepCardsModel } from '../models/BeepCardsModel';
 import { deleteUser } from '../network/BeepCardManagerAPI';
-import AddBeepCardModal from '../components/AddBeepCardModal'; // Import the AddBeepCardModal component
-import { Toast } from 'toastify-react-native';
-
 
 interface BeepCardsScreenProps {
   beepCards: BeepCardsModel[];
@@ -19,48 +17,15 @@ interface BeepCardsScreenProps {
 const BeepCardsScreen: React.FC<BeepCardsScreenProps> = ({ beepCards, setBeepCards }) => {
   const [selectedBeepCard, setSelectedBeepCard] = useState<BeepCardsModel | null>(null);
   const [isConfirmationModalVisible, setIsConfirmationModalVisible] = useState(false);
-  const [deviceID, setDeviceID] = useState<string | null>(null); // State to store device ID
-  const [filteredBeepCards, setFilteredBeepCards] = useState<BeepCardsModel[]>([]); // State to store filtered beep cards
-  const [isBeepCardModalVisible, setIsBeepCardModalVisible] = useState(false);
+  const navigation = useNavigation<NativeStackNavigationProp<ParamListBase>>();
 
-  const openBeepCardModal = () => {
-    setIsBeepCardModalVisible(true);
+  const openBeepCardScreen = () => {
+    navigation.navigate('AddBeepCard');
   };
-
-  // Fetch the deviceId from AsyncStorage on component mount
-  useEffect(() => {
-    const getDeviceId = async () => {
-      const id = await AsyncStorage.getItem('deviceId');
-      setDeviceID(id);
-    };
-    getDeviceId();
-  }, []);
-
-  // Filter beepCards based on the userId matching deviceId
-  useEffect(() => {
-    const filterBeepCards = async () => {
-      if (deviceID) {
-        const filteredResults = await Promise.all(beepCards.map(async beepCard => {
-          if (await beepCard.userID === deviceID) {
-            return beepCard;
-          }
-          return null; // Ensure we return null for non-matching cards
-        }));
-        const filteredCards = filteredResults.filter(card => card !== null) as BeepCardsModel[]; // Filter out null values
-        setFilteredBeepCards(filteredCards);
-      }
-    };
-    filterBeepCards();
-  }, [deviceID, beepCards]);
-
 
   const handleTrashPress = (item: BeepCardsModel) => {
     setSelectedBeepCard(item);
     setIsConfirmationModalVisible(true);
-  };
-
-  const handleBeepCardSaved = (newBeepCard: BeepCardsModel) => {
-    Toast.success('Beep card ' + newBeepCard.UUIC + ' replaced successfully!', 'top');
   };
 
   // Function to handle deletion of the selected beep card
@@ -68,7 +33,7 @@ const BeepCardsScreen: React.FC<BeepCardsScreenProps> = ({ beepCards, setBeepCar
     if (selectedBeepCard) {
       try {
         // Call the deleteUser function from the API file to delete the selected beep card
-        await deleteUser(selectedBeepCard._id);
+        await deleteUser(selectedBeepCard.UUIC);
 
         // Update the beepCards state by filtering out the deleted card
         const updatedBeepCards = beepCards.filter(card => card._id !== selectedBeepCard._id);
@@ -99,7 +64,7 @@ const BeepCardsScreen: React.FC<BeepCardsScreenProps> = ({ beepCards, setBeepCar
       <View style={styles.cardDetails}>
         <Text style={styles.addBeepCardText}>Add a beep™ Card</Text>
         <Text style={styles.cardNumberText}>The Card Number is Found at the Back of your beep™ card.</Text>
-        <TouchableOpacity style={styles.addButton} onPress={openBeepCardModal}>
+        <TouchableOpacity style={styles.addButton} onPress={openBeepCardScreen}>
           <Text style={styles.addButtonLabel}>Add Card</Text>
         </TouchableOpacity>
       </View>
@@ -107,7 +72,7 @@ const BeepCardsScreen: React.FC<BeepCardsScreenProps> = ({ beepCards, setBeepCar
   );
 
   const renderItem = ({ item, index }: { item: BeepCardsModel; index: number }) => {
-    const isLastItem = index + 1 === filteredBeepCards.length;
+    const isLastItem = index + 1 === beepCards.length;
 
     const latestTimestamp = item.updatedAt > item.createdAt ? item.updatedAt : item.createdAt;
     const timestampText = latestTimestamp === item.createdAt ? 'Created On' : 'Available Balance as of';
@@ -158,11 +123,11 @@ const BeepCardsScreen: React.FC<BeepCardsScreenProps> = ({ beepCards, setBeepCar
 
   return (
     <View style={styles.container}>
-      {filteredBeepCards.length > 0 ? (
+      {beepCards.length > 0 ? (
         <FlatList
-          data={filteredBeepCards}
+          data={beepCards}
           renderItem={renderItem}
-          keyExtractor={(item, index) => index.toString()}
+          keyExtractor={(_item, index) => index.toString()}
           contentContainerStyle={styles.list}
         />
       ) : (
@@ -175,13 +140,6 @@ const BeepCardsScreen: React.FC<BeepCardsScreenProps> = ({ beepCards, setBeepCar
         title={'Delete Beep Card'}
         message={'Do you want to remove the following beep card from your list of beep cards?'}
         beepCardDetails={selectedBeepCard ? `UUID: ${selectedBeepCard.UUIC}` : ''}
-      />
-      <AddBeepCardModal
-        isVisible={isBeepCardModalVisible}
-        onClose={() => setIsBeepCardModalVisible(false)}
-        beepCards={beepCards}
-        setBeepCards={setBeepCards}
-        onSuccess={handleBeepCardSaved}
       />
     </View>
   );
