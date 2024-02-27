@@ -166,7 +166,7 @@ const BeepCardsScreen: React.FC<BeepCardsScreenProps> = ({ beepCards, setBeepCar
           contentContainerStyle={styles.list}
         />
       ) : (
-        renderGradientCard()
+        <><View style={styles.list}>{renderGradientCard()}</View></>
       )}
       <ConfirmationModal
         isVisible={isConfirmationModalVisible}
