@@ -1,6 +1,6 @@
 import { NavigationProp, useIsFocused } from '@react-navigation/native';
 import React, { useEffect, useState } from 'react';
-import { FlatList, ImageBackground, RefreshControl, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { FlatList, ImageBackground, RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import DeviceInfo from 'react-native-device-info';
 import LinearGradient from 'react-native-linear-gradient';
 import { Text } from 'react-native-paper';
@@ -10,6 +10,8 @@ import ConfirmationModal from '../components/ConfirmationModal';
 import { BeepCardItem as BeepCardsModel } from '../models/BeepCardsModel';
 import { TransactionItem as TransactionsModel } from '../models/TransactionsModel';
 import { deleteUser, fetchBeepCard, getTransactions } from '../network/BeepCardManagerAPI';
+import { MMKV } from 'react-native-mmkv';
+
 
 interface BeepCardsScreenProps {
 	beepCards: BeepCardsModel[];
@@ -27,6 +29,9 @@ const BeepCardsScreen: React.FC<BeepCardsScreenProps> = ({ beepCards, setBeepCar
 	const [refreshing, setRefreshing] = useState(false);
 	const [isInitialRender, setIsInitialRender] = useState(true); // Track initial render
 	const isFocused = useIsFocused();
+	const mmkv = new MMKV();
+
+	const TRANSACTION_LIMIT = 5;
 
 	const openBeepCardScreen = () => {
 		navigation.navigate('AddBeepCard'); // Pass the onRefresh function
@@ -35,7 +40,7 @@ const BeepCardsScreen: React.FC<BeepCardsScreenProps> = ({ beepCards, setBeepCar
 	useEffect(() => {
 		if (!isInitialRender) {
 			const unsubscribe = navigation.addListener('focus', () => {
-					onRefresh();
+				onRefresh();
 			});
 
 			return unsubscribe;
@@ -82,7 +87,9 @@ const BeepCardsScreen: React.FC<BeepCardsScreenProps> = ({ beepCards, setBeepCar
 				// Update the beepCards state by filtering out the deleted card
 				const updatedBeepCards = beepCards.filter(card => card._id !== selectedBeepCard._id);
 				setBeepCards(updatedBeepCards);
+				mmkv.delete(selectedBeepCard.UUIC.toString());
 
+				onRefresh();
 				console.log('Beep card deleted:', selectedBeepCard?.UUIC);
 				setIsConfirmationModalVisible(false);
 				// Assuming you have a function to fetch updated beep cards, you can call it here to update the list
@@ -141,7 +148,7 @@ const BeepCardsScreen: React.FC<BeepCardsScreenProps> = ({ beepCards, setBeepCar
 			return formattedDate;
 		};
 
-		const matchingTransactions = transactions.filter(transaction => transaction.UUIC === item.UUIC);
+		const matchingTransactions = transactions.filter(transaction => transaction.UUIC === item.UUIC).slice(0, TRANSACTION_LIMIT);
 
 		const toggleDetails = () => {
 			setShowTransactionsMap(prevState => ({
@@ -187,6 +194,9 @@ const BeepCardsScreen: React.FC<BeepCardsScreenProps> = ({ beepCards, setBeepCar
 									<Text style={styles.validUntilText}>Valid Until {validUntilDateString}</Text>
 								</View>
 								<View style={styles.row}>
+									<Text style={styles.label}>{mmkv.getString(item.UUIC.toString())}</Text>
+								</View>
+								<View style={styles.row}>
 									<Text style={styles.timestamp}>
 										{timestampText} {formatDate(latestTimestamp)}
 									</Text>
@@ -198,14 +208,15 @@ const BeepCardsScreen: React.FC<BeepCardsScreenProps> = ({ beepCards, setBeepCar
 									<View style={[styles.badge, { backgroundColor: item.isActive ? '#00E676' : '#FF1744' }]} />
 									<Text style={styles.badgeText}>{getOnboardStatus(item.isActive)}</Text>
 								</View>
+
 							</View>
 						</ImageBackground>
 					</View>
 					{showTransactionsMap[item._id] && (
-						<>
+						<View>
 							{matchingTransactions.length > 0 ? (
 								<View style={styles.transactionDatesAndContainer}>
-									<Text style={styles.transactionHeaderText}>Latest Transactions</Text>
+									<Text style={styles.transactionHeaderText}>Latest Transactions ({matchingTransactions.length})</Text>
 									<Text style={styles.transactionTimestamp}>as of {formatTransactionTimestamp(latestTimestamp)}</Text>
 									{matchingTransactions.map((transaction, num) => (
 										<View key={num} style={styles.transactionContainer}>
@@ -231,16 +242,17 @@ const BeepCardsScreen: React.FC<BeepCardsScreenProps> = ({ beepCards, setBeepCar
 									{renderNoTransactions()}
 								</View>
 							)}
-						</>
+						</View>
 					)}
-
 				</TouchableOpacity>
 				{isLastItem && renderGradientCard()}
 			</>
 		);
 	};
 
+
 	return (
+
 		<View style={styles.container}>
 			{beepCards.length > 0 ? (
 				<FlatList
@@ -251,7 +263,11 @@ const BeepCardsScreen: React.FC<BeepCardsScreenProps> = ({ beepCards, setBeepCar
 					refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
 				/>
 			) : (
-				<><View style={styles.list}>{renderGradientCard()}</View></>
+				<>
+					<ScrollView style={styles.list} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
+						{renderGradientCard()}
+					</ScrollView>
+				</>
 			)}
 			<ConfirmationModal
 				isVisible={isConfirmationModalVisible}
@@ -445,7 +461,7 @@ const styles = StyleSheet.create({
 	validUntilText: {
 		fontSize: 10,
 		color: '#FFFFFF',
-		marginBottom: 15,
+		marginBottom: 5,
 		fontFamily: 'Roboto',
 	},
 	timestamp: {
@@ -484,6 +500,13 @@ const styles = StyleSheet.create({
 	},
 	row: {
 		flexDirection: 'row',
+	},
+	label: {
+		fontSize: 15,
+		fontWeight: '600',
+		color: '#FFFFFF',
+		marginBottom: 5,
+		fontFamily: 'Roboto',
 	},
 });
 

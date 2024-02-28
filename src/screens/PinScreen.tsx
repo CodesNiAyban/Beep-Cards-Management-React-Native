@@ -49,7 +49,7 @@ const VerifyPinScreen: React.FC<Props> = ({ navigation }) => {
 
     const handleDeletePin = async () => {
         try {
-            await mmkv.delete('pin');
+            mmkv.delete('pin');
             console.log('PIN & deviceId deleted successfully');
             navigation.navigate('CreatePin');
         } catch (deleteError) {
@@ -74,7 +74,7 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#FF6F00', // Orange background color
+        backgroundColor: '#EDF3FF', // Orange background color
         padding: 20,
     },
     titleContainer: {

@@ -23,7 +23,7 @@ const screenContainerStyle = { flex: 1 };
 const styles = StyleSheet.create({
   addButtonContainer: {
     position: 'absolute',
-    bottom: 40,
+    bottom: 60,
     alignSelf: 'center',
     zIndex: 1,
   },
@@ -113,20 +113,23 @@ const MainTabNavigator = () => {
     <View style={screenContainerStyle}>
       <Tab.Navigator
         screenOptions={({ route }) => ({
-          tabBarIcon: ({ color, size }) => {
+          tabBarIcon: ({ color }) => {
             let iconName = '';
             if (route.name === 'Home') {
               iconName = 'house-user';
+              return <FontAwesome5 name={iconName} size={22} color={color} />;
             } else if (route.name === 'MyCard') {
               iconName = 'wallet';
+              return <FontAwesome5 name={iconName} size={22} color={color} />;
             } else if (route.name === 'Transactions') {
               iconName = 'money-check';
+              return <FontAwesome5 name={iconName} size={20} color={color} />;
             } else if (route.name === 'Account') {
               iconName = 'user-circle';
+              return <FontAwesome5 name={iconName} size={24} color={color} />;
             } else {
               return;
             }
-            return <FontAwesome5 name={iconName} size={size} color={color} />;
           },
           tabBarActiveTintColor: '#172459',
           tabBarInactiveTintColor: '#ADAEB2',
@@ -134,14 +137,14 @@ const MainTabNavigator = () => {
             backgroundColor: '#FFFFFF', // Background color for the tab bar
             borderTopWidth: 0,
             borderTopColor: '#172459',
-            height: 60, // Adjust the height of the tab bar
-            paddingVertical: 5, // Add padding vertically
-            paddingHorizontal: 10, // Add padding horizontally
+            height: 80, // Adjust the height of the tab bar
+            paddingHorizontal: 13, // Add padding horizontally
             borderRadius: 0, // Apply border radius to round the edges
+            paddingTop: 5,
           },
           tabBarLabelStyle: {
             fontSize: 11,
-            marginBottom: 13,
+            marginBottom: 34,
           },
           headerStyle: {
             backgroundColor: '#172459', // Header background color
