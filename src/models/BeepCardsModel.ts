@@ -1,4 +1,5 @@
 export interface BeepCardItem {
+    showTransactions: boolean;
     _id: string,
     UUIC: number;
     balance: number;

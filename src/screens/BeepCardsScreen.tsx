@@ -18,6 +18,7 @@ interface BeepCardsScreenProps {
 const BeepCardsScreen: React.FC<BeepCardsScreenProps> = ({ beepCards, setBeepCards }) => {
   const [selectedBeepCard, setSelectedBeepCard] = useState<BeepCardsModel | null>(null);
   const [isConfirmationModalVisible, setIsConfirmationModalVisible] = useState(false);
+  const [showTransactionsMap, setShowTransactionsMap] = useState<{ [key: string]: boolean }>({});
   const navigation = useNavigation<NativeStackNavigationProp<ParamListBase>>();
 
   const openBeepCardScreen = () => {
@@ -84,40 +85,86 @@ const BeepCardsScreen: React.FC<BeepCardsScreenProps> = ({ beepCards, setBeepCar
     validUntilDate.setFullYear(validUntilDate.getFullYear() + 5);
     const validUntilDateString = validUntilDate.toISOString().split('T')[0]; // Format: yyyy-mm-dd
 
+    const formatTransactionTimestamp = (timestamp: string): string => {
+      const date = new Date(timestamp); // Assuming timestamp is in BSON format
+      const options: Intl.DateTimeFormatOptions = {
+        month: 'long',
+        day: '2-digit',
+        year: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric',
+        hour12: true,
+        timeZone: 'UTC',
+      };
+      const formattedDate = date.toLocaleDateString('en-US', options);
+      return formattedDate;
+    };
+
+    const toggleDetails = () => {
+      setShowTransactionsMap(prevState => ({
+        ...prevState,
+        [item._id]: !prevState[item._id], // Toggle transactions visibility for the current card
+      }));
+    };
+
     return (
       <>
-        <ImageBackground
-          source={require('../assets/beepCardImage.png')} // Replace '../assets/card_background.jpg' with your image source
-          style={styles.cardContainer}
-          // eslint-disable-next-line react-native/no-inline-styles
-          imageStyle={{ borderRadius: 10 }} // Apply borderRadius to the image background
-        >
-          <View style={styles.cardHeader}>
-            <Text style={styles.cardHeaderText}>{item.UUIC}</Text>
-            <TouchableOpacity onPress={() => handleTrashPress(item)}>
-              <FontAwesome5 name="trash" size={18} color="#FD9A00" style={styles.trashIcon} />
-            </TouchableOpacity>
+        <TouchableOpacity onPress={toggleDetails}>
+          <View>
+            <ImageBackground
+              source={require('../assets/beepCardImage.png')} // Replace '../assets/card_background.jpg' with your image source
+              style={styles.cardContainer}
+              // eslint-disable-next-line react-native/no-inline-styles
+              imageStyle={{ borderRadius: 10 }} // Apply borderRadius to the image background
+            >
+              <View style={styles.cardHeader}>
+                <Text style={styles.cardHeaderText}>{item.UUIC}</Text>
+                <TouchableOpacity onPress={() => handleTrashPress(item)}>
+                  <FontAwesome5 name="trash" size={18} color="#FD9A00" style={styles.trashIcon} />
+                </TouchableOpacity>
+              </View>
+              <View style={styles.cardDetails}>
+                <View style={styles.row}>
+                  <Text style={styles.validUntilText}>Valid Until {validUntilDateString}</Text>
+                </View>
+                <View style={styles.row}>
+                  <Text style={styles.timestamp}>
+                    {timestampText} {formatDate(latestTimestamp)}
+                  </Text>
+                </View>
+                <View style={styles.row}>
+                  <Text style={styles.cardBalance}>₱{item.balance.toFixed(2)}</Text>
+                </View>
+                <View style={styles.nestedBadge}>
+                  <View style={[styles.badge, { backgroundColor: item.isActive ? '#00E676' : '#FF1744' }]} />
+                  <Text style={styles.badgeText}>{getOnboardStatus(item.isActive)}</Text>
+                </View>
+              </View>
+            </ImageBackground>
           </View>
-          <View style={styles.cardDetails}>
-            <View style={styles.row}>
-              <Text style={styles.validUntilText}>Valid Until {validUntilDateString}</Text>
+          {showTransactionsMap[item._id] && (
+            <View style={styles.transactionDatesAndContainer}>
+              <Text style={styles.transactionHeaderText}>Latest Transactions</Text>
+              <Text style={styles.transactionTimestamp}>as of {formatTransactionTimestamp(latestTimestamp)}</Text>
+              <View style={styles.transactionContainer}>
+                <View style={styles.transactionContainer}>
+                  <View style={styles.transactionDetails}>
+                    <View style={styles.circle}>
+                      <FontAwesome5 name="exchange-alt" size={30} color="#1B2646" />
+                    </View>
+                    <View style={styles.transactionContainer}>
+                      <Text style={styles.title}>MRT3 Rail Service Provider</Text>
+                      <View style={styles.transactionDetails}>
+                        <Text style={styles.date}>{formatTransactionTimestamp(latestTimestamp)}</Text>
+                        <Text style={styles.balance}>- ₱{item.balance.toFixed(2)}</Text>
+                      </View>
+                    </View>
+                  </View>
+                </View>
+              </View>
             </View>
-            <View style={styles.row}>
-              <Text style={styles.timestamp}>
-                {timestampText} {formatDate(latestTimestamp)}
-              </Text>
-            </View>
-            <View style={styles.row}>
-              <Text style={styles.cardBalance}>₱{item.balance.toFixed(2)}</Text>
-            </View>
-            <View style={styles.nestedBadge}>
-              <View
-                style={[styles.badge, { backgroundColor: item.isActive ? '#00E676' : '#FF1744' }]}
-              />
-              <Text style={styles.badgeText}>{getOnboardStatus(item.isActive)}</Text>
-            </View>
-          </View>
-        </ImageBackground>
+          )}
+        </TouchableOpacity>
         {isLastItem && renderGradientCard()}
       </>
     );
@@ -192,10 +239,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   cardContainer: {
-    backgroundColor: '#FFA726',
+    backgroundColor: '#FFFFF',
     padding: 18,
     borderRadius: 10,
-    marginBottom: 5,
+    marginTop: 5,
     shadowColor: '#000',
     shadowOffset: {
       width: 2,
@@ -204,6 +251,86 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.75,
     shadowRadius: 3.84,
     elevation: 10,
+  },
+  transactionIcon: {
+    marginRight: 10,
+  },
+  transactionDatesAndContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 10,
+    marginBottom: 5,
+    padding: 18,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 2,
+      height: 2,
+    },
+    shadowOpacity: 0.75,
+    shadowRadius: 3.84,
+    elevation: 3,
+  },
+  transactionDetails: {
+    flexDirection: 'row',
+  },
+  title: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#333',
+    marginBottom: 5,
+    fontFamily: 'Roboto',
+  },
+  date: {
+    fontSize: 11,
+    color: '#555',
+    fontFamily: 'Roboto',
+  },
+  balance: {
+    fontSize: 12,
+    color: 'red',
+    marginLeft: 'auto', // Automatically adjust margin left
+    fontFamily: 'Roboto',
+  },
+  transactionText: {
+    flex: 1,
+    color: '#333',
+    fontFamily: 'Roboto',
+  },
+  transactionContainer: {
+    borderRadius: 10,
+    marginBottom: 5,
+    paddingTop: 5,
+    flex: 1,
+    justifyContent: 'center', // Center vertically
+  },
+  trashIconContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  circle: {
+    width: 50,
+    height: 50,
+    borderRadius: 25, // Change the radius to make it a perfect circle
+    marginRight: 10, // Adjust as needed
+    backgroundColor: '#EDF3FF', // Change color as needed
+    justifyContent: 'center', // Center vertically
+    alignItems: 'center', // Center horizontally
+    marginTop: 5, // Adjust vertical position
+  },
+  transactionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  transactionHeaderText: {
+    fontSize: 15,
+    fontWeight: 'bold',
+    color: '#333',
+    fontFamily: 'Roboto',
+  },
+  transactionTimestamp: {
+    fontSize: 11,
+    color: '#555',
+    fontFamily: 'Roboto',
   },
   addBeepCardContainer: {
     justifyContent: 'center',
@@ -216,6 +343,7 @@ const styles = StyleSheet.create({
     paddingTop: 15,
     paddingLeft: 30,
     paddingRight: 30,
+    marginTop: 5,
   },
   cardHeader: {
     flexDirection: 'row',
