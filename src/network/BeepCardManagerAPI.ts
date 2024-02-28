@@ -25,9 +25,9 @@ export async function fetchBeepCard(userId: string): Promise<BeepCard[]> {
 
 }
 
-export async function createNewBeepCardUser(userID: string, beepCardId: Partial<BeepCardItem>): Promise<BeepCardItem | null> {
+export async function linkBeepCard(userID: string, beepCard: string): Promise<BeepCardItem | null> {
     try {
-        const response = await fetchData(`${DEVELOPMENT_URL}/api/beepCardManager/${beepCardId._id}`, {
+        const response = await fetchData(`${DEVELOPMENT_URL}/api/beepCardManager/link/${beepCard}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -48,10 +48,14 @@ export async function createNewBeepCardUser(userID: string, beepCardId: Partial<
 }
 
 
-export async function deleteUser(UUID: number): Promise<void> {
+export async function deleteUser(userID: string, UUID: number): Promise<void> {
     try {
-        const response = await fetchData(`${DEVELOPMENT_URL}/api/beepCardManager/${UUID}`, {
-            method: 'DELETE',
+        const response = await fetchData(`${DEVELOPMENT_URL}/api/beepCardManager/unlink/${UUID}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 'userID': userID }), // Include userID in the request body
         });
 
         if (response.status === 404) {

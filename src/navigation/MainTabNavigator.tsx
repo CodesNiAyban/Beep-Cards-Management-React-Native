@@ -89,6 +89,7 @@ const MainTabNavigator = () => {
   useEffect(() => {
     const fetchBeepCardsData = async () => {
       try {
+        console.log('Nagfetch');
         const androidID = await DeviceInfo.getAndroidId();
         const data = await fetchBeepCard(androidID);
         setBeepCards(data);

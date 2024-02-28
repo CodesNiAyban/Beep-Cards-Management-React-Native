@@ -8,6 +8,7 @@ import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import ConfirmationModal from '../components/ConfirmationModal';
 import { BeepCardItem as BeepCardsModel } from '../models/BeepCardsModel';
 import { deleteUser } from '../network/BeepCardManagerAPI';
+import DeviceInfo from 'react-native-device-info';
 
 interface BeepCardsScreenProps {
   beepCards: BeepCardsModel[];
@@ -33,7 +34,8 @@ const BeepCardsScreen: React.FC<BeepCardsScreenProps> = ({ beepCards, setBeepCar
     if (selectedBeepCard) {
       try {
         // Call the deleteUser function from the API file to delete the selected beep card
-        await deleteUser(selectedBeepCard.UUIC);
+        const androidID = await DeviceInfo.getAndroidId();
+        await deleteUser(androidID, selectedBeepCard.UUIC);
 
         // Update the beepCards state by filtering out the deleted card
         const updatedBeepCards = beepCards.filter(card => card._id !== selectedBeepCard._id);
