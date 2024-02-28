@@ -1,30 +1,30 @@
 [
     {
-      "UUIC": 637805000000000,
+      "UUIC": 637805213278894,
       "tapIn": true,
       "initialBalance": "3391",
       "prevStation": "N/A",
       "currStation": "ayala",
       "distance": 0,
-      "fare": 2,
+      "fare": 10,
       "currBalance": 3389,
       "createdAt": "2024-02-13T16:17:15.768Z",
       "updatedAt": "2024-02-13T16:17:15.768Z"
     },
     {
-      "UUIC": 637805000000001,
+      "UUIC": 637805213278894,
       "tapIn": true,
       "initialBalance": "2500",
       "prevStation": "N/A",
       "currStation": "boni",
       "distance": 0,
-      "fare": 2,
+      "fare": 50,
       "currBalance": 2498,
       "createdAt": "2024-02-14T10:30:00.000Z",
       "updatedAt": "2024-02-14T10:30:00.000Z"
     },
     {
-      "UUIC": 637805000000002,
+      "UUIC": 637805213278894,
       "tapIn": true,
       "initialBalance": "5000",
       "prevStation": "N/A",
@@ -36,7 +36,7 @@
       "updatedAt": "2024-02-15T14:45:00.000Z"
     },
     {
-      "UUIC": 637805000000003,
+      "UUIC": 637805222222222,
       "tapIn": true,
       "initialBalance": "1000",
       "prevStation": "N/A",
@@ -48,7 +48,7 @@
       "updatedAt": "2024-02-16T18:20:00.000Z"
     },
     {
-      "UUIC": 637805000000004,
+      "UUIC": 637805222222222,
       "tapIn": true,
       "initialBalance": "7000",
       "prevStation": "N/A",

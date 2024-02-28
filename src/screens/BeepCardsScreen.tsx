@@ -101,11 +101,29 @@ const BeepCardsScreen: React.FC<BeepCardsScreenProps> = ({ beepCards, setBeepCar
       return formattedDate;
     };
 
+    const matchingTransactions = sampleData.filter(transaction => transaction.UUIC === item.UUIC);
+
     const toggleDetails = () => {
       setShowTransactionsMap(prevState => ({
         ...prevState,
         [item._id]: !prevState[item._id], // Toggle transactions visibility for the current card
       }));
+    };
+
+    const renderNoTransactions = () => {
+      return (
+        <>
+          <View style={styles.transactionContainer}>
+            <View style={styles.transactionDetails}>
+              <FontAwesome5 name="exclamation-circle" size={30} color="#555" />
+              <View style={styles.noTransactionFoundFlex}>
+                <Text style={styles.transactionHeaderText}>No Transactions</Text>
+                <Text style={styles.transactionTimestamp}>as of {formatTransactionTimestamp(latestTimestamp)}</Text>
+              </View>
+            </View>
+          </View>
+        </>
+      );
     };
 
     return (
@@ -144,29 +162,38 @@ const BeepCardsScreen: React.FC<BeepCardsScreenProps> = ({ beepCards, setBeepCar
             </ImageBackground>
           </View>
           {showTransactionsMap[item._id] && (
-            <View style={styles.transactionDatesAndContainer}>
-              <Text style={styles.transactionHeaderText}>Latest Transactions</Text>
-              <Text style={styles.transactionTimestamp}>as of {formatTransactionTimestamp(latestTimestamp)}</Text>
-              {sampleData.map((transaction, num) => (
-                <View key={num} style={styles.transactionContainer}>
-                  <View style={styles.transactionContainer}>
-                    <View style={styles.transactionDetails}>
-                      <View style={styles.circle}>
-                        <FontAwesome5 name="exchange-alt" size={25} color="#1B2646" />
-                      </View>
+            <>
+              {matchingTransactions.length > 0 ? (
+                <View style={styles.transactionDatesAndContainer}>
+                  <Text style={styles.transactionHeaderText}>Latest Transactions</Text>
+                  <Text style={styles.transactionTimestamp}>as of {formatTransactionTimestamp(latestTimestamp)}</Text>
+                  {matchingTransactions.map((transaction, num) => (
+                    <View key={num} style={styles.transactionContainer}>
                       <View style={styles.transactionContainer}>
-                        <Text style={styles.title}>MRT Online Service Provider</Text>
                         <View style={styles.transactionDetails}>
-                          <Text style={styles.date}>{formatTransactionTimestamp(transaction.updatedAt)}</Text>
-                          <Text style={styles.balance}>- ₱{transaction.fare.toFixed(2)}</Text>
+                          <View style={styles.circle}>
+                            <FontAwesome5 name="exchange-alt" size={15} color="#1B2646" />
+                          </View>
+                          <View style={styles.transactionContainer}>
+                            <Text style={styles.title}>MRT Online Service Provider</Text>
+                            <View style={styles.transactionDetails}>
+                              <Text style={styles.date}>{formatTransactionTimestamp(transaction.updatedAt)}</Text>
+                              <Text style={styles.balance}>- ₱{transaction.fare.toFixed(2)}</Text>
+                            </View>
+                          </View>
                         </View>
                       </View>
                     </View>
-                  </View>
+                  ))}
                 </View>
-              ))}
-            </View>
+              ) : (
+                <View style={styles.transactionDatesAndContainer}>
+                  {renderNoTransactions()}
+                </View>
+              )}
+            </>
           )}
+
         </TouchableOpacity>
         {isLastItem && renderGradientCard()}
       </>
@@ -272,6 +299,9 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     elevation: 3,
   },
+  noTransactionFoundFlex: {
+    marginLeft: 10,
+  },
   transactionDetails: {
     flexDirection: 'row',
   },
@@ -310,8 +340,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   circle: {
-    width: 50,
-    height: 50,
+    width: 40,
+    height: 40,
     borderRadius: 25, // Change the radius to make it a perfect circle
     marginRight: 10, // Adjust as needed
     backgroundColor: '#EDF3FF', // Change color as needed
