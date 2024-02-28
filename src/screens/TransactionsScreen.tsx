@@ -1,56 +1,31 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import { BeepCardItem as BeepCardsModel } from '../models/BeepCardsModel';
-import { TransactionItem as TransactionModel } from '../models/TransactionsModel';
+import { TransactionItem as TransactionsModel } from '../models/TransactionsModel';
 
-// Sample JSON data for transactions
-const jsonData = [
-  {
-    _id: '1', // Unique identifier for the transaction
-    UUIC: Math.floor(Math.random() * 1000000000000000),
-    tapIn: Math.random() < 0.5,
-    initialBalance: String(Math.floor(Math.random() * 10000)),
-    prevStation: 'Station1',
-    currStation: 'Station2',
-    distance: Math.floor(Math.random() * 100),
-    fare: Math.floor(Math.random() * 50),
-    currBalance: Math.floor(Math.random() * 10000),
-    createdAt: randomDate(new Date(2020, 0, 1), new Date()),
-    updatedAt: randomDate(new Date(2020, 0, 1), new Date()),
-  },
-  // Add more transaction objects here with unique _id values
-];
-
-function randomDate(start: Date, end: Date) {
-  return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
-}
 
 interface TransactionScreenProps {
   beepCards: BeepCardsModel[];
   setBeepCards: React.Dispatch<React.SetStateAction<BeepCardsModel[]>>;
+  transactions: TransactionsModel[]; // Array of transaction objects
+  setTransactions: React.Dispatch<React.SetStateAction<TransactionsModel[]>>; // Function to update transactions state
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const TransactionScreen : React.FC<TransactionScreenProps> = ({ beepCards, setBeepCards }) => {
-  const [transactionsData, setTransactionsData] = useState<TransactionModel[]>([]);
+const TransactionScreen : React.FC<TransactionScreenProps> = ({ beepCards, setBeepCards, transactions, setTransactions }) => {
   const [expandedGroups, setExpandedGroups] = useState<{ [key: string]: boolean }>({});
 
-  useEffect(() => {
-    setTimeout(() => {
-      setTransactionsData(jsonData);
-    }, 1000);
-  }, []);
 
-  const groupedTransactions = transactionsData.reduce((acc, transaction) => {
+  const groupedTransactions = transactions.reduce((acc, transaction) => {
     const date = new Date(transaction.createdAt).toLocaleDateString();
     if (!acc[date]) {
       acc[date] = [];
     }
     acc[date].push(transaction);
     return acc;
-  }, {} as { [key: string]: TransactionModel[] });
+  }, {} as { [key: string]: TransactionsModel[] });
 
   const toggleGroup = (date: string) => {
     setExpandedGroups((prevState) => ({
@@ -59,7 +34,7 @@ const TransactionScreen : React.FC<TransactionScreenProps> = ({ beepCards, setBe
     }));
   };
 
-  const renderItem = ({ item }: { item: TransactionModel }) => {
+  const renderItem = ({ item }: { item: TransactionsModel }) => {
     // Get transaction time with hours, minutes, and seconds
     const transactionTime = new Date(item.createdAt);
     const transactionTimeFormatted = `${transactionTime.getHours().toString().padStart(2, '0')}:${transactionTime.getMinutes().toString().padStart(2, '0')}:${transactionTime.getSeconds().toString().padStart(2, '0')}`;
@@ -96,7 +71,7 @@ const TransactionScreen : React.FC<TransactionScreenProps> = ({ beepCards, setBe
     return expandedGroups[date] ? (
       <View>
         {transactionsForDate.map(transaction => (
-          <View key={transaction.UUIC}>
+          <View key={transaction._id}>
             {renderItem({ item: transaction })}
             <View style={styles.divider} />
           </View>
@@ -115,7 +90,7 @@ const TransactionScreen : React.FC<TransactionScreenProps> = ({ beepCards, setBe
 
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
-      {transactionsData.length > 0 ? (
+      {transactions.length > 0 ? (
         <View style={styles.container}>
           {Object.keys(groupedTransactions).map((date) => (
             <View key={date}>

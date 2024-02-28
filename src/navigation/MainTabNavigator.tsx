@@ -5,7 +5,8 @@ import React, { useEffect, useState } from 'react';
 import { Image, StyleSheet, TouchableOpacity, View } from 'react-native';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import { BeepCardItem as BeepCardsModel } from '../models/BeepCardsModel';
-import { fetchBeepCard } from '../network/BeepCardManagerAPI';
+import { TransactionItem as TransactionsModel } from '../models/TransactionsModel';
+import { fetchBeepCard, getTransactions } from '../network/BeepCardManagerAPI';
 import BeepCardsScreen from '../screens/BeepCardsScreen';
 import TransactionsScreen from '../screens/TransactionsScreen';
 import TapScreen from '../screens/TapScreen';
@@ -72,6 +73,7 @@ const AddBeepCardButton: React.FC<AddBeepCardButtonProps> = ({ onPress, navigati
 const MainTabNavigator = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [beepCards, setBeepCards] = useState<BeepCardsModel[]>([]);
+  const [transactions, setTransactions] = useState<TransactionsModel[]>([]);
   const navigation = useNavigation<NativeStackNavigationProp<ParamListBase>>();
 
   const showAddBeepCardScreen = () => {
@@ -92,7 +94,13 @@ const MainTabNavigator = () => {
         console.log('Nagfetch');
         const androidID = await DeviceInfo.getAndroidId();
         const data = await fetchBeepCard(androidID);
+        const transactionData = await getTransactions(androidID);
         setBeepCards(data);
+        if (transactionData) {
+          setTransactions(transactionData);
+        } else {
+          console.log('Transactions not found');
+        }
       } catch (error) {
         console.error('Error fetching beep cards:', error);
       }
@@ -168,8 +176,8 @@ const MainTabNavigator = () => {
             headerShown: true,
             title: 'Cards', // Set header title
           }}
-        >
-          {() => <BeepCardsScreen beepCards={beepCards} setBeepCards={setBeepCards} />}
+        >{() => <BeepCardsScreen beepCards={beepCards} setBeepCards={setBeepCards} transactions={transactions} setTransactions={setTransactions} />}
+
         </Tab.Screen>
         <Tab.Screen
           name="Tap"
@@ -186,7 +194,7 @@ const MainTabNavigator = () => {
             title: 'Transactions', // Set header title
           }}
         >
-          {() => <TransactionsScreen beepCards={beepCards} setBeepCards={setBeepCards} />}
+          {() => <TransactionsScreen beepCards={beepCards} setBeepCards={setBeepCards} transactions={transactions} setTransactions={setTransactions}/>}
         </Tab.Screen>
         <Tab.Screen
           name="Account"

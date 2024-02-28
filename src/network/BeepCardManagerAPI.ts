@@ -72,16 +72,11 @@ export async function deleteUser(userID: string, UUID: number): Promise<void> {
     }
 }
 
-export async function getTransactions(transaction: string): Promise<Transaction | null> {
+export async function getTransactions(userID: string): Promise<Transaction[]> {
     try {
-        const response = await fetchData(`${DEVELOPMENT_URL}/api/mrt/transactions/${transaction}`, {
+        const response = await fetchData(`${DEVELOPMENT_URL}/api/beepCardManager/transactions/${userID}`, {
             method: 'GET',
         });
-
-        if (response.status === 404) {
-            // Beep card not found, return null
-            return null;
-        }
 
         return await response.json();
     } catch (error) {

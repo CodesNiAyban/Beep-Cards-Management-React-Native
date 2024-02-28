@@ -9,14 +9,17 @@ import ConfirmationModal from '../components/ConfirmationModal';
 import { BeepCardItem as BeepCardsModel } from '../models/BeepCardsModel';
 import { deleteUser } from '../network/BeepCardManagerAPI';
 import DeviceInfo from 'react-native-device-info';
-import sampleData from '../assets/sampleData.json'; // Import sample data
+import { TransactionItem as TransactionsModel } from '../models/TransactionsModel';
 
 interface BeepCardsScreenProps {
   beepCards: BeepCardsModel[];
   setBeepCards: React.Dispatch<React.SetStateAction<BeepCardsModel[]>>;
+  transactions: TransactionsModel[]; // Array of transaction objects
+  setTransactions: React.Dispatch<React.SetStateAction<TransactionsModel[]>>; // Function to update transactions state
 }
 
-const BeepCardsScreen: React.FC<BeepCardsScreenProps> = ({ beepCards, setBeepCards }) => {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const BeepCardsScreen: React.FC<BeepCardsScreenProps> = ({ beepCards, setBeepCards, transactions, setTransactions }) => {
   const [selectedBeepCard, setSelectedBeepCard] = useState<BeepCardsModel | null>(null);
   const [isConfirmationModalVisible, setIsConfirmationModalVisible] = useState(false);
   const [showTransactionsMap, setShowTransactionsMap] = useState<{ [key: string]: boolean }>({});
@@ -101,7 +104,7 @@ const BeepCardsScreen: React.FC<BeepCardsScreenProps> = ({ beepCards, setBeepCar
       return formattedDate;
     };
 
-    const matchingTransactions = sampleData.filter(transaction => transaction.UUIC === item.UUIC);
+    const matchingTransactions = transactions.filter(transaction => transaction.UUIC === item.UUIC);
 
     const toggleDetails = () => {
       setShowTransactionsMap(prevState => ({
@@ -177,7 +180,7 @@ const BeepCardsScreen: React.FC<BeepCardsScreenProps> = ({ beepCards, setBeepCar
                           <View style={styles.transactionContainer}>
                             <Text style={styles.title}>MRT Online Service Provider</Text>
                             <View style={styles.transactionDetails}>
-                              <Text style={styles.date}>{formatTransactionTimestamp(transaction.updatedAt)}</Text>
+                              <Text style={styles.date}>{formatTransactionTimestamp(transaction.updatedAt.toString())}</Text>
                               <Text style={styles.balance}>- ₱{transaction.fare.toFixed(2)}</Text>
                             </View>
                           </View>
