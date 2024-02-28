@@ -176,7 +176,7 @@ const MainTabNavigator = () => {
             headerShown: true,
             title: 'Cards', // Set header title
           }}
-        >{() => <BeepCardsScreen beepCards={beepCards} setBeepCards={setBeepCards} transactions={transactions} setTransactions={setTransactions} />}
+        >{() => <BeepCardsScreen beepCards={beepCards} setBeepCards={setBeepCards} transactions={transactions} setTransactions={setTransactions} navigation={navigation}/>}
 
         </Tab.Screen>
         <Tab.Screen

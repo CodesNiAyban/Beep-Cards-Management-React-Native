@@ -1,4 +1,4 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { MMKV } from 'react-native-mmkv'
 import { NavigationProp } from '@react-navigation/native';
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -11,11 +11,13 @@ interface Props {
 const CreatePinScreen: React.FC<Props> = ({ navigation }) => {
     const [pin, setPin] = useState('');
     const [verifyPin, setVerifyPin] = useState('');
+    const mmkv = new MMKV();
 
     useEffect(() => {
         const checkPinExists = async () => {
             try {
-                const pinCheck = await AsyncStorage.getItem('pin');
+                const pinCheck = mmkv.getString('pin');
+                console.log(pinCheck)
                 if (pinCheck) {
                     navigation.navigate('Pin'); // Navigate to PinScreen if PIN exists
                 }
@@ -25,7 +27,8 @@ const CreatePinScreen: React.FC<Props> = ({ navigation }) => {
         };
 
         checkPinExists();
-    }, [navigation]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const handlePinInputChange = (text: string) => {
         // Ensure only numbers are allowed and limit input to 4 characters
@@ -40,7 +43,8 @@ const CreatePinScreen: React.FC<Props> = ({ navigation }) => {
     const handlePinCreation = async () => {
         if (pin === verifyPin) {
             try {
-                await AsyncStorage.setItem('pin', pin);
+                mmkv.set('pin', pin);
+                console.log('pin', pin);
                 navigation.navigate('Main');
             } catch (error) {
                 console.error('Error creating PIN file:', error);
@@ -91,14 +95,14 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#FF6F00', // Orange base color
+        backgroundColor: '#EDF3FF', // Orange base color
         padding: 20,
     },
     title: {
         fontSize: 28,
         fontWeight: 'bold',
         marginBottom: 20,
-        color: '#FFFFFF', // White text color
+        color: '#333', // White text color
         textAlign: 'center',
     },
     inputContainer: {
@@ -108,19 +112,19 @@ const styles = StyleSheet.create({
     label: {
         fontSize: 18,
         marginBottom: 5,
-        color: '#FFFFFF', // White text color
+        color: '#333', // White text color
     },
     input: {
         borderWidth: 1,
-        borderColor: '#FFFFFF', // White border color
+        borderColor: '#333', // White border color
         borderRadius: 5,
         paddingHorizontal: 10,
         paddingVertical: 8,
-        color: '#FFFFFF', // White text color
+        color: '#333', // White text color
         fontSize: 16,
     },
     button: {
-        backgroundColor: '#FFFFFF', // White button background color
+        backgroundColor: '#333', // White button background color
         paddingVertical: 12,
         paddingHorizontal: 30,
         borderRadius: 5,

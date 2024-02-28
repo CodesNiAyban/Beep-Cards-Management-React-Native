@@ -1,9 +1,9 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NavigationProp } from '@react-navigation/native';
 import React, { useEffect, useState } from 'react';
 import { Button, StyleSheet, View, Text } from 'react-native';
 import ToastManager, { Toast } from 'toastify-react-native';
 import CustomPinKeyboard from '../components/CustomPinKeyboard';
+import { MMKV } from 'react-native-mmkv';
 
 interface Props {
     navigation: NavigationProp<any>;
@@ -11,11 +11,12 @@ interface Props {
 
 const VerifyPinScreen: React.FC<Props> = ({ navigation }) => {
     const [storedPin, setStoredPin] = useState('');
+    const mmkv = new MMKV();
 
     useEffect(() => {
         const getStoredPin = async () => {
             try {
-                const pin = await AsyncStorage.getItem('pin');
+                const pin = mmkv.getString('pin');
                 if (pin) {
                     setStoredPin(pin);
                 }
@@ -26,15 +27,15 @@ const VerifyPinScreen: React.FC<Props> = ({ navigation }) => {
         };
 
         getStoredPin();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const handlePinInputChange = async (text: string) => {
         if (text.length === 4) {
             try {
-                const savedPin = await AsyncStorage.getItem('pin');
-                const deviceIdCheck = await AsyncStorage.getItem('deviceId');
-                if (deviceIdCheck && text === savedPin) {
-                    console.log('PIN is correct with ' + deviceIdCheck);
+                const savedPin = mmkv.getString('pin');
+                if (text === savedPin) {
+                    console.log('PIN is correct with ');
                     navigation.navigate('Main');
                 } else {
                     Toast.error('Incorrect PIN.', 'top');
@@ -48,9 +49,9 @@ const VerifyPinScreen: React.FC<Props> = ({ navigation }) => {
 
     const handleDeletePin = async () => {
         try {
-            await AsyncStorage.removeItem('pin');
-            await AsyncStorage.removeItem('deviceId');
+            await mmkv.delete('pin');
             console.log('PIN & deviceId deleted successfully');
+            navigation.navigate('CreatePin');
         } catch (deleteError) {
             console.error('Error deleting PIN:', deleteError);
         }

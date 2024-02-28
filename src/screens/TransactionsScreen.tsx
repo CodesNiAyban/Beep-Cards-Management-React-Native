@@ -10,7 +10,7 @@ interface TransactionScreenProps {
   beepCards: BeepCardsModel[];
   setBeepCards: React.Dispatch<React.SetStateAction<BeepCardsModel[]>>;
   transactions: TransactionsModel[]; // Array of transaction objects
-  setTransactions: React.Dispatch<React.SetStateAction<TransactionsModel[]>>; // Function to update transactions state
+  setTransactions: React.Dispatch<React.SetStateAction<TransactionsModel[]>>; 
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

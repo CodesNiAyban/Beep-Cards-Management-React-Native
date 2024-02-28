@@ -1,48 +1,59 @@
 import React, { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Button, Text, TextInput, useTheme } from 'react-native-paper';
-
-// Import the linkBeepCard function
 import { linkBeepCard } from '../network/BeepCardManagerAPI';
 import DeviceInfo from 'react-native-device-info';
+import Toast from 'react-native-toast-message';
+import { NavigationProp } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const AddBeepCardScreen: React.FC = () => {
+interface BeepCardsScreenProps {
+  navigation: NavigationProp<any>;
+}
+
+const AddBeepCardScreen: React.FC<BeepCardsScreenProps> = ({ navigation }) => {
   const [beepCardNumber, setBeepCardNumber] = useState('637805');
+  const [cardLabel, setCardLabel] = useState('');
   const theme = useTheme();
 
   const handleSave = async () => {
     try {
-      // Call the linkBeepCard function with userID and beepCard details
       const androidID = await DeviceInfo.getAndroidId();
-      const userID = androidID; // Replace 'yourUserID' with the actual userID
-      const beepCard = { UUIC: beepCardNumber }; // Assuming beepCard object structure
+      const userID = androidID;
+      const beepCard = { UUIC: beepCardNumber };
       const linkedBeepCard = await linkBeepCard(userID, beepCard.UUIC);
+      await AsyncStorage.setItem(beepCardNumber, JSON.stringify({ label: cardLabel, UUIC: beepCardNumber }));
 
       if (linkedBeepCard) {
-        // Successfully linked beep card
         console.log('Beep card linked:', linkedBeepCard);
-        // Optionally, you can navigate to another screen or perform any other action upon success
+        navigation.goBack();
       } else {
-        // Beep card not found
         console.log('Beep card not found.');
-        // Optionally, you can display an error message or perform any other action upon failure
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'Beep card not found',
+        });
       }
     } catch (error) {
-      // Handle error
-      console.error('Error linking beep card:', error);
-      // Optionally, you can display an error message or perform any other action upon failure
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Failed to link beep card',
+      });
     }
   };
 
   const handleBeepCardNumberChange = (newText: string) => {
-    // Limit input to numbers only
     const newValue = newText.replace(/\D/g, '');
-    // Ensure the input starts with '637805'
     const formattedValue = newValue.startsWith('637805') ? newValue : '637805';
-    // Limit input to maximum of 15 characters
     const maxLength = 15;
     const truncatedValue = formattedValue.slice(0, maxLength);
     setBeepCardNumber(truncatedValue);
+  };
+
+  const handleCardLabelChange = (text: string) => {
+    setCardLabel(text);
   };
 
   return (
@@ -66,6 +77,8 @@ const AddBeepCardScreen: React.FC = () => {
             <Text style={styles.label}>Card Label (optional)</Text>
             <View style={styles.textInputContainer}>
               <TextInput
+                value={cardLabel}
+                onChangeText={handleCardLabelChange}
                 style={[styles.textInput, { borderColor: 'transparent' }]}
                 mode="outlined"
                 outlineStyle={{ borderRadius: 10, borderColor: '#EAEAEA' }}
@@ -77,11 +90,11 @@ const AddBeepCardScreen: React.FC = () => {
         </View>
       </View>
       <View style={styles.bottomContainer}>
-        {/* Call handleSave function when the button is pressed */}
         <Button mode="contained" onPress={handleSave} style={styles.button}>
           Save Card
         </Button>
       </View>
+      <Toast />
     </View>
   );
 };
@@ -89,12 +102,12 @@ const AddBeepCardScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#EDF3FF', // Added background color for the whole screen
+    backgroundColor: '#EDF3FF',
   },
   cardContainer: {
     backgroundColor: '#FFFFFF',
-    elevation: 1, // Add elevation for shadow effect
-    height: 220, // Set a fixed height
+    elevation: 1,
+    height: 220,
   },
   bottomContainer: {
     position: 'absolute',
@@ -103,7 +116,7 @@ const styles = StyleSheet.create({
     right: 0,
     backgroundColor: '#FFFFFF',
     paddingVertical: 15,
-    elevation: 3, // Add elevation for shadow effect
+    elevation: 3,
   },
   contentContainer: {
     height: '100%',

@@ -3,7 +3,7 @@ import { TransactionItem as Transaction } from '../models/TransactionsModel';
 import { fetchData } from './Fetcher';
 
 const DEVELOPMENT_URL = process.env.DEVELOPMENT_URL;
-// const DEVELOPMENT_URL = 'http://localhost:5000';
+// const DEVELOPMENT_URL = 'http://10.200.53.60:5000';
 
 
 export async function fetchBeepCard(userId: string): Promise<BeepCard[]> {
@@ -19,8 +19,8 @@ export async function fetchBeepCard(userId: string): Promise<BeepCard[]> {
 
         return response.json();
     } catch (error) {
-        console.error('Error fetching beep cards:', error);
-        throw error; // Rethrow the error for the caller to handle
+        console.log('Error fetching beep cards:', error);
+        return []; // Rethrow the error for the caller to handle
     }
 
 }
@@ -42,8 +42,8 @@ export async function linkBeepCard(userID: string, beepCard: string): Promise<Be
 
         return await response.json();
     } catch (error) {
-        console.error('Error updating beep card:', error);
-        throw error; // You can choose to throw or handle the error based on your requirements
+        console.log('Error updating beep card:', error);
+        return null;
     }
 }
 
@@ -63,12 +63,12 @@ export async function deleteUser(userID: string, UUID: number): Promise<void> {
             console.warn('Beep card not found:', UUID);
         } else if (!response.ok) {
             // Handle other errors if needed
-            console.error('Error deleting beep card:', response.statusText);
+            console.log('Error deleting beep card:', response.statusText);
             throw new Error('Error deleting beep card');
         }
     } catch (error) {
-        console.error('Error deleting beep card:', error);
-        throw error; // You can choose to throw or handle the error based on your requirements
+        console.log('Error deleting beep card:', error);
+        return; // You can choose to throw or handle the error based on your requirements
     }
 }
 
@@ -81,7 +81,7 @@ export async function getTransactions(userID: string): Promise<Transaction[]> {
         return await response.json();
     } catch (error) {
         // Handle other errors if needed
-        console.error('Error fetching transaction:', error);
-        throw error; // You can choose to throw or handle the error based on your requirements
+        console.log('Error fetching transaction:', error);
+        return []; // You can choose to throw or handle the error based on your requirements
     }
 }
