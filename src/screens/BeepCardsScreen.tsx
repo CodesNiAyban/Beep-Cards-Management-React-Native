@@ -9,6 +9,7 @@ import ConfirmationModal from '../components/ConfirmationModal';
 import { BeepCardItem as BeepCardsModel } from '../models/BeepCardsModel';
 import { deleteUser } from '../network/BeepCardManagerAPI';
 import DeviceInfo from 'react-native-device-info';
+import sampleData from '../assets/sampleData.json'; // Import sample data
 
 interface BeepCardsScreenProps {
   beepCards: BeepCardsModel[];
@@ -146,22 +147,24 @@ const BeepCardsScreen: React.FC<BeepCardsScreenProps> = ({ beepCards, setBeepCar
             <View style={styles.transactionDatesAndContainer}>
               <Text style={styles.transactionHeaderText}>Latest Transactions</Text>
               <Text style={styles.transactionTimestamp}>as of {formatTransactionTimestamp(latestTimestamp)}</Text>
-              <View style={styles.transactionContainer}>
-                <View style={styles.transactionContainer}>
-                  <View style={styles.transactionDetails}>
-                    <View style={styles.circle}>
-                      <FontAwesome5 name="exchange-alt" size={30} color="#1B2646" />
-                    </View>
-                    <View style={styles.transactionContainer}>
-                      <Text style={styles.title}>MRT3 Rail Service Provider</Text>
-                      <View style={styles.transactionDetails}>
-                        <Text style={styles.date}>{formatTransactionTimestamp(latestTimestamp)}</Text>
-                        <Text style={styles.balance}>- ₱{item.balance.toFixed(2)}</Text>
+              {sampleData.map((transaction, num) => (
+                <View key={num} style={styles.transactionContainer}>
+                  <View style={styles.transactionContainer}>
+                    <View style={styles.transactionDetails}>
+                      <View style={styles.circle}>
+                        <FontAwesome5 name="exchange-alt" size={25} color="#1B2646" />
+                      </View>
+                      <View style={styles.transactionContainer}>
+                        <Text style={styles.title}>MRT Online Service Provider</Text>
+                        <View style={styles.transactionDetails}>
+                          <Text style={styles.date}>{formatTransactionTimestamp(transaction.updatedAt)}</Text>
+                          <Text style={styles.balance}>- ₱{transaction.fare.toFixed(2)}</Text>
+                        </View>
                       </View>
                     </View>
                   </View>
                 </View>
-              </View>
+              ))}
             </View>
           )}
         </TouchableOpacity>
@@ -259,7 +262,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 10,
     marginBottom: 5,
-    padding: 18,
+    padding: 20,
     shadowColor: '#000',
     shadowOffset: {
       width: 2,
@@ -281,12 +284,12 @@ const styles = StyleSheet.create({
   },
   date: {
     fontSize: 11,
-    color: '#555',
+    color: '#898A8F',
     fontFamily: 'Roboto',
   },
   balance: {
     fontSize: 12,
-    color: 'red',
+    color: '#D66062',
     marginLeft: 'auto', // Automatically adjust margin left
     fontFamily: 'Roboto',
   },

@@ -1,0 +1,63 @@
+[
+    {
+      "UUIC": 637805000000000,
+      "tapIn": true,
+      "initialBalance": "3391",
+      "prevStation": "N/A",
+      "currStation": "ayala",
+      "distance": 0,
+      "fare": 2,
+      "currBalance": 3389,
+      "createdAt": "2024-02-13T16:17:15.768Z",
+      "updatedAt": "2024-02-13T16:17:15.768Z"
+    },
+    {
+      "UUIC": 637805000000001,
+      "tapIn": true,
+      "initialBalance": "2500",
+      "prevStation": "N/A",
+      "currStation": "boni",
+      "distance": 0,
+      "fare": 2,
+      "currBalance": 2498,
+      "createdAt": "2024-02-14T10:30:00.000Z",
+      "updatedAt": "2024-02-14T10:30:00.000Z"
+    },
+    {
+      "UUIC": 637805000000002,
+      "tapIn": true,
+      "initialBalance": "5000",
+      "prevStation": "N/A",
+      "currStation": "taft",
+      "distance": 0,
+      "fare": 2,
+      "currBalance": 4998,
+      "createdAt": "2024-02-15T14:45:00.000Z",
+      "updatedAt": "2024-02-15T14:45:00.000Z"
+    },
+    {
+      "UUIC": 637805000000003,
+      "tapIn": true,
+      "initialBalance": "1000",
+      "prevStation": "N/A",
+      "currStation": "edsa",
+      "distance": 0,
+      "fare": 2,
+      "currBalance": 998,
+      "createdAt": "2024-02-16T18:20:00.000Z",
+      "updatedAt": "2024-02-16T18:20:00.000Z"
+    },
+    {
+      "UUIC": 637805000000004,
+      "tapIn": true,
+      "initialBalance": "7000",
+      "prevStation": "N/A",
+      "currStation": "cubao",
+      "distance": 0,
+      "fare": 2,
+      "currBalance": 6998,
+      "createdAt": "2024-02-17T09:10:00.000Z",
+      "updatedAt": "2024-02-17T09:10:00.000Z"
+    }
+  ]
+  
