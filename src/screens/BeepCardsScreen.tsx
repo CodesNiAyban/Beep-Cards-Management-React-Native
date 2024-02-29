@@ -4,7 +4,6 @@ import { FlatList, ImageBackground, RefreshControl, ScrollView, StyleSheet, Touc
 import DeviceInfo from 'react-native-device-info';
 import LinearGradient from 'react-native-linear-gradient';
 import { Text } from 'react-native-paper';
-import Toast from 'react-native-toast-message';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import ConfirmationModal from '../components/ConfirmationModal';
 import { BeepCardItem as BeepCardsModel } from '../models/BeepCardsModel';
@@ -277,7 +276,6 @@ const BeepCardsScreen: React.FC<BeepCardsScreenProps> = ({ beepCards, setBeepCar
 				message={'Do you want to remove the following beep card from your list of beep cards?'}
 				beepCardDetails={selectedBeepCard ? `UUID: ${selectedBeepCard.UUIC}` : ''}
 			/>
-			<Toast />
 		</View>
 	);
 };

@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, TouchableOpacity } from 'react-native';
 import { Button, Text, TextInput, useTheme } from 'react-native-paper';
 import { linkBeepCard } from '../network/BeepCardManagerAPI';
 import DeviceInfo from 'react-native-device-info';
 import Toast from 'react-native-toast-message';
 import { NavigationProp } from '@react-navigation/native';
 import { MMKV } from 'react-native-mmkv';
-import Icon from 'react-native-vector-icons/FontAwesome';
+import Icon from 'react-native-vector-icons/FontAwesome5';
 import SuccessModal from '../components/SuccessModal';
 import { Camera, useCameraDevice, useCameraPermission, useCodeScanner } from 'react-native-vision-camera';
 
@@ -21,17 +21,19 @@ const AddBeepCardScreen: React.FC<BeepCardsScreenProps> = ({ navigation }) => {
   const [cardLabelError, setCardLabelError] = useState('');
   const [isButtonDisabled, setIsButtonDisabled] = useState(true);
   const [successModalVisible, setSuccessModalVisible] = useState(false); // State for success modal
+  const [showFrontCamera, setShowFrontCamera] = useState(false); // State for toggling front/back camera
   const { hasPermission, requestPermission } = useCameraPermission();
   const mmkv = new MMKV();
   const theme = useTheme();
+  const [cameraVisible, setCameraVisible] = useState(false); // State for toggling camera visibility
 
-  const device = useCameraDevice('back');
+  const device = useCameraDevice(showFrontCamera ? 'front' : 'back');
 
   useEffect(() => {
     if (hasPermission) {
       requestPermission();
     }
-  }, [hasPermission, requestPermission]);
+  }, [hasPermission, requestPermission, showFrontCamera]);
 
   const codeScanner = useCodeScanner({
     codeTypes: ['qr'],
@@ -41,6 +43,8 @@ const AddBeepCardScreen: React.FC<BeepCardsScreenProps> = ({ navigation }) => {
       if (isValidBeepCard(scannedValue)) {
         setBeepCardNumber(scannedValue);
         setIsButtonDisabled(false);
+        // Close camera after successful scan
+        setCameraVisible(false);
       } else {
         console.log('Invalid beep card number:', scannedValue);
       }
@@ -50,6 +54,14 @@ const AddBeepCardScreen: React.FC<BeepCardsScreenProps> = ({ navigation }) => {
   const isValidBeepCard = (value: string) => {
     const regex = /^637805\d{9}$/;
     return regex.test(value);
+  };
+
+  const switchCamera = () => {
+    setShowFrontCamera(prevState => !prevState);
+  };
+
+  const toggleCamera = () => {
+    setCameraVisible(!cameraVisible); // Ensure the camera is shown when toggling
   };
 
   const handleSave = async () => {
@@ -117,6 +129,9 @@ const AddBeepCardScreen: React.FC<BeepCardsScreenProps> = ({ navigation }) => {
                 theme={{ ...theme, colors: { secondary: '#EAEAEA', outline: '#EAEAEA' } }}
                 keyboardType="numeric"
               />
+              <TouchableOpacity style={styles.qrButton} onPress={toggleCamera}>
+                <Icon name="qrcode" size={24} color="#172459" />
+              </TouchableOpacity>
             </View>
             {beepCardNumberError ? (
               <View style={styles.errorContainer}>
@@ -146,15 +161,23 @@ const AddBeepCardScreen: React.FC<BeepCardsScreenProps> = ({ navigation }) => {
           </View>
         </View>
         <View style={styles.cameraContainer}>
-          <Camera
-            style={styles.camera}
-            device={device!}
-            isActive={true}
-            codeScanner={codeScanner}
-          />
-          <View style={styles.qrLabel}>
-            <Text style={styles.qrLabelText}>beep™ QR</Text>
-          </View>
+          {cameraVisible && (
+            <>
+              <Camera
+                style={styles.camera}
+                device={device!}
+                isActive={true}
+                codeScanner={codeScanner}
+              />
+              <View style={styles.qrLabel}>
+                <Text style={styles.qrLabelText}>beep™ QR</Text>
+              </View>
+              <View style={styles.scanRegion} />
+              <TouchableOpacity style={styles.toggleCameraContainer} onPress={switchCamera}>
+                <Icon name="exchange-alt" size={24} color="#172459" />
+              </TouchableOpacity>
+            </>
+          )}
         </View>
       </View>
       <View style={styles.bottomContainer}>
@@ -252,10 +275,8 @@ const styles = StyleSheet.create({
   },
   cameraContainer: {
     flex: 1,
-    padding: 10,
-    backgroundColor: 'black',
-    justifyContent: 'center',
-    alignItems: 'center',
+    position: 'relative',
+    overflow: 'hidden', // Ensure the scan region is contained within this container
   },
   camera: {
     width: '100%',
@@ -263,15 +284,38 @@ const styles = StyleSheet.create({
   },
   qrLabel: {
     position: 'absolute',
-    top: 10,
-    right: 10,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-    padding: 5,
+    top: 20,
+    left: 20,
+    padding: 10,
+    backgroundColor: '#172459',
     borderRadius: 5,
   },
   qrLabelText: {
     color: '#FFFFFF',
     fontSize: 14,
+  },
+  scanRegion: {
+    position: 'absolute',
+    left: 69.5, // Adjust to position the scan region box at the center horizontally
+    top: 90, // Adjust to position the scan region box at the center vertically
+    width: '65%',
+    height: '50%',
+    borderWidth: 2, // Adjust the border width as desired
+    borderColor: '#FFFFFF',
+    borderRadius: 0, // Set to 0 to remove border radius
+    borderStyle: 'dashed', // Use solid border style for a clear rectangle
+    opacity: 0.5, // Adjust the opacity as desired
+  },
+  toggleCameraContainer: {
+    position: 'absolute',
+    top: 20, // Align to the top
+    right: 20, // Align to the right
+  },
+  qrButton: {
+    position: 'absolute',
+    right: 10,
+    top: '50%',
+    transform: [{ translateY: -12 }], // Center the button vertically
   },
 });
 
