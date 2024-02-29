@@ -179,7 +179,7 @@ const MainTabNavigator = () => {
             headerShown: true,
             title: 'Cards', // Set header title
           }}
-        >{() => <BeepCardsScreen beepCards={beepCards} setBeepCards={setBeepCards} transactions={transactions} setTransactions={setTransactions} navigation={navigation}/>}
+        >{() => <BeepCardsScreen beepCards={beepCards} setBeepCards={setBeepCards} transactions={transactions} setTransactions={setTransactions} navigation={navigation} />}
 
         </Tab.Screen>
         <Tab.Screen
@@ -187,6 +187,12 @@ const MainTabNavigator = () => {
           component={TapScreen}
           options={{
             tabBarLabel: 'Tap',
+          }}
+          listeners={{
+            tabPress: e => {
+              // add your conditions here
+              e.preventDefault(); // <-- this function blocks navigating to screen
+            },
           }}
         />
         <Tab.Screen
@@ -197,7 +203,7 @@ const MainTabNavigator = () => {
             title: 'Transactions', // Set header title
           }}
         >
-          {() => <TransactionsScreen beepCards={beepCards} setBeepCards={setBeepCards} transactions={transactions} setTransactions={setTransactions}/>}
+          {() => <TransactionsScreen beepCards={beepCards} setBeepCards={setBeepCards} transactions={transactions} setTransactions={setTransactions} navigation={navigation} />}
         </Tab.Screen>
         <Tab.Screen
           name="Account"

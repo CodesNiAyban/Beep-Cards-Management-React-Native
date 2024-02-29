@@ -1,11 +1,11 @@
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createStackNavigator } from '@react-navigation/stack';
 import React from 'react';
+import AddBeepCardScreen from '../screens/AddBeepCardScreen';
 import CreatePinScreen from '../screens/CreatePinScreen';
 import PinScreen from '../screens/PinScreen';
 import MainTabNavigator from './MainTabNavigator'; // Corrected import
-import AddBeepCardScreen from '../screens/AddBeepCardScreen';
 
-const Stack = createNativeStackNavigator();
+const Stack = createStackNavigator();
 
 const RootStackNavigator = () => {
 

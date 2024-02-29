@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Button, Text, TextInput, useTheme } from 'react-native-paper';
 import { linkBeepCard } from '../network/BeepCardManagerAPI';
@@ -8,6 +8,7 @@ import { NavigationProp } from '@react-navigation/native';
 import { MMKV } from 'react-native-mmkv';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import SuccessModal from '../components/SuccessModal';
+import { Camera, useCameraDevice, useCameraPermission, useCodeScanner } from 'react-native-vision-camera';
 
 interface BeepCardsScreenProps {
   navigation: NavigationProp<any>;
@@ -20,8 +21,36 @@ const AddBeepCardScreen: React.FC<BeepCardsScreenProps> = ({ navigation }) => {
   const [cardLabelError, setCardLabelError] = useState('');
   const [isButtonDisabled, setIsButtonDisabled] = useState(true);
   const [successModalVisible, setSuccessModalVisible] = useState(false); // State for success modal
+  const { hasPermission, requestPermission } = useCameraPermission();
   const mmkv = new MMKV();
   const theme = useTheme();
+
+  const device = useCameraDevice('back');
+
+  useEffect(() => {
+    if (hasPermission) {
+      requestPermission();
+    }
+  }, [hasPermission, requestPermission]);
+
+  const codeScanner = useCodeScanner({
+    codeTypes: ['qr'],
+    onCodeScanned: (codes) => {
+      const scannedValues = codes.map(code => code.value);
+      const scannedValue = scannedValues.toString();
+      if (isValidBeepCard(scannedValue)) {
+        setBeepCardNumber(scannedValue);
+        setIsButtonDisabled(false);
+      } else {
+        console.log('Invalid beep card number:', scannedValue);
+      }
+    },
+  });
+
+  const isValidBeepCard = (value: string) => {
+    const regex = /^637805\d{9}$/;
+    return regex.test(value);
+  };
 
   const handleSave = async () => {
     try {
@@ -32,11 +61,12 @@ const AddBeepCardScreen: React.FC<BeepCardsScreenProps> = ({ navigation }) => {
       mmkv.set(beepCardNumber, cardLabel);
 
       if (linkedBeepCard) {
-        setSuccessModalVisible(true)
+        setSuccessModalVisible(true);
         console.log('Beep card linked:', linkedBeepCard);
       } else {
         console.log('Beep card not found.');
         setBeepCardNumberError('Beep card not found.');
+        setIsButtonDisabled(true);
       }
     } catch (error) {
       Toast.show({
@@ -63,8 +93,9 @@ const AddBeepCardScreen: React.FC<BeepCardsScreenProps> = ({ navigation }) => {
     if (text.trim() !== '' && regex.test(text)) {
       setCardLabel(text);
       setCardLabelError('');
-    } else {
+    } else if (text === '') {
       setCardLabel('');
+    } else {
       setCardLabelError('Please enter a valid label.');
     }
   };
@@ -114,6 +145,17 @@ const AddBeepCardScreen: React.FC<BeepCardsScreenProps> = ({ navigation }) => {
             ) : null}
           </View>
         </View>
+        <View style={styles.cameraContainer}>
+          <Camera
+            style={styles.camera}
+            device={device!}
+            isActive={true}
+            codeScanner={codeScanner}
+          />
+          <View style={styles.qrLabel}>
+            <Text style={styles.qrLabelText}>beep™ QR</Text>
+          </View>
+        </View>
       </View>
       <View style={styles.bottomContainer}>
         <Button
@@ -158,10 +200,9 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   contentContainer: {
-    height: '100%',
+    flex: 1,
   },
   content: {
-    height: '100%',
     padding: 15,
   },
   label: {
@@ -208,6 +249,29 @@ const styles = StyleSheet.create({
   icon: {
     marginRight: 5,
     marginLeft: 10,
+  },
+  cameraContainer: {
+    flex: 1,
+    padding: 10,
+    backgroundColor: 'black',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  camera: {
+    width: '100%',
+    height: '100%',
+  },
+  qrLabel: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    padding: 5,
+    borderRadius: 5,
+  },
+  qrLabelText: {
+    color: '#FFFFFF',
+    fontSize: 14,
   },
 });
 

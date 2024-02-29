@@ -68,7 +68,7 @@ const CreatePinScreen: React.FC<Props> = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Welcome to Beep</Text>
+      <Text style={styles.title}>Welcome to beep™</Text>
       <Text style={styles.subtitle}>Enter your new 4-digit PIN.</Text>
       <View style={styles.inputContainer}>
         <Text style={styles.label}>Create a New PIN</Text>
