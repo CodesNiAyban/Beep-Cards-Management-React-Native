@@ -94,6 +94,7 @@ const VerifyPinScreen: React.FC<Props> = ({ navigation }) => {
       <Modal visible={showConfirmation} animationType="fade" transparent>
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
+          <Text style={styles.modalTitle}>PIN Reset</Text>
             <Text style={styles.modalText}>Are you sure you want to reset your PIN?</Text>
             <View style={styles.modalButtons}>
               <TouchableOpacity style={styles.modalButtonNo} onPress={() => handleConfirmation(false)}>
@@ -156,7 +157,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalText: {
+    fontSize: 14,
+    marginBottom: 20,
+    textAlign: 'center',
+    color: '#333',
+  },
+  modalTitle: {
     fontSize: 18,
+    fontWeight: '600',
     marginBottom: 20,
     textAlign: 'center',
     color: '#333',
@@ -167,11 +175,10 @@ const styles = StyleSheet.create({
   },
   modalButtonYes: {
     width: 100,
-    height: 50,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#172459',
-    borderRadius: 10,
+    backgroundColor: '#FF6347',
+    borderRadius: 5,
     elevation: 2,
     marginHorizontal: 10,
   },
@@ -181,7 +188,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#DDDDDD',
-    borderRadius: 10,
+    borderRadius: 5,
     elevation: 2,
     marginHorizontal: 10,
   },

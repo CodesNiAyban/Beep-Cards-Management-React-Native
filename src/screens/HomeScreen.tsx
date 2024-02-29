@@ -7,7 +7,7 @@ export default function Component() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Hello, Limuel</Text>
+        <Text style={styles.title}>Hello, Ayban</Text>
         <FontAwesome5 name="microscope" style={styles.icon} />
       </View>
       <View style={styles.buttonContainer}>
@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   card: {
-    backgroundColor: 'white',
+    backgroundColor: '#333',
     borderRadius: 8,
     padding: 16,
     marginBottom: 12,
@@ -117,7 +117,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 16,
     marginBottom: 12,
-    flexDirection: 'row',
+    flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'space-between',
   },

@@ -272,9 +272,9 @@ const BeepCardsScreen: React.FC<BeepCardsScreenProps> = ({ beepCards, setBeepCar
 				isVisible={isConfirmationModalVisible}
 				onClose={() => setIsConfirmationModalVisible(false)}
 				onConfirm={handleConfirmDelete}
-				title={'Delete Beep Card'}
-				message={'Do you want to remove the following beep card from your list of beep cards?'}
-				beepCardDetails={selectedBeepCard ? `UUID: ${selectedBeepCard.UUIC}` : ''}
+				title={'Unlink beep™ Card'}
+				message={'Do you want to remove the following beep™ card from your list of beep™ cards?'}
+				beepCardDetails={selectedBeepCard ? `${selectedBeepCard.UUIC}` : ''}
 			/>
 		</View>
 	);

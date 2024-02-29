@@ -1,14 +1,14 @@
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, TouchableOpacity } from 'react-native';
-import { Button, Text, TextInput, useTheme } from 'react-native-paper';
-import { linkBeepCard } from '../network/BeepCardManagerAPI';
-import DeviceInfo from 'react-native-device-info';
-import Toast from 'react-native-toast-message';
 import { NavigationProp } from '@react-navigation/native';
+import React, { useState } from 'react';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import DeviceInfo from 'react-native-device-info';
 import { MMKV } from 'react-native-mmkv';
+import { Button, Text, TextInput, useTheme } from 'react-native-paper';
+import Toast from 'react-native-toast-message';
 import Icon from 'react-native-vector-icons/FontAwesome5';
-import SuccessModal from '../components/SuccessModal';
 import { Camera, useCameraDevice, useCameraPermission, useCodeScanner } from 'react-native-vision-camera';
+import SuccessModal from '../components/SuccessModal';
+import { linkBeepCard } from '../network/BeepCardManagerAPI';
 
 interface BeepCardsScreenProps {
   navigation: NavigationProp<any>;
@@ -29,19 +29,13 @@ const AddBeepCardScreen: React.FC<BeepCardsScreenProps> = ({ navigation }) => {
 
   const device = useCameraDevice(showFrontCamera ? 'front' : 'back');
 
-  useEffect(() => {
-    if (hasPermission) {
-      requestPermission();
-    }
-  }, [hasPermission, requestPermission, showFrontCamera]);
-
   const codeScanner = useCodeScanner({
     codeTypes: ['qr'],
     onCodeScanned: (codes) => {
-      const scannedValues = codes.map(code => code.value);
-      const scannedValue = scannedValues.toString();
-      if (isValidBeepCard(scannedValue)) {
-        setBeepCardNumber(scannedValue);
+      const {value} = codes[0];
+      const scannedValue = value;
+      if (isValidBeepCard(scannedValue!)) {
+        setBeepCardNumber(scannedValue!);
         setIsButtonDisabled(false);
         // Close camera after successful scan
         setCameraVisible(false);
@@ -60,8 +54,15 @@ const AddBeepCardScreen: React.FC<BeepCardsScreenProps> = ({ navigation }) => {
     setShowFrontCamera(prevState => !prevState);
   };
 
-  const toggleCamera = () => {
-    setCameraVisible(!cameraVisible); // Ensure the camera is shown when toggling
+  const toggleCamera = async () => {
+    if (!hasPermission) {
+      await requestPermission();
+      if (await requestPermission()) {
+        setCameraVisible(!cameraVisible); // Ensure the camera is shown when toggling
+      }
+    } else if (hasPermission) {
+      setCameraVisible(!cameraVisible); // Ensure the camera is shown when toggling
+    }
   };
 
   const handleSave = async () => {
@@ -174,7 +175,7 @@ const AddBeepCardScreen: React.FC<BeepCardsScreenProps> = ({ navigation }) => {
               </View>
               <View style={styles.scanRegion} />
               <TouchableOpacity style={styles.toggleCameraContainer} onPress={switchCamera}>
-                <Icon name="exchange-alt" size={24} color="#172459" />
+                <Icon name="exchange-alt" size={23} color="#172459" />
               </TouchableOpacity>
             </>
           )}
@@ -288,6 +289,7 @@ const styles = StyleSheet.create({
     left: 20,
     padding: 10,
     backgroundColor: '#172459',
+    opacity: 0.8,
     borderRadius: 5,
   },
   qrLabelText: {
@@ -302,7 +304,7 @@ const styles = StyleSheet.create({
     height: '50%',
     borderWidth: 2, // Adjust the border width as desired
     borderColor: '#FFFFFF',
-    borderRadius: 0, // Set to 0 to remove border radius
+    borderRadius: 60, // Set to 0 to remove border radius
     borderStyle: 'dashed', // Use solid border style for a clear rectangle
     opacity: 0.5, // Adjust the opacity as desired
   },
@@ -310,6 +312,11 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 20, // Align to the top
     right: 20, // Align to the right
+    borderWidth: 1,
+    borderRadius: 5,
+    padding: 5,
+    backgroundColor: '#EDF3FF',
+    borderColor: '#172459',
   },
   qrButton: {
     position: 'absolute',
