@@ -7,6 +7,7 @@ import Toast from 'react-native-toast-message';
 import { NavigationProp } from '@react-navigation/native';
 import { MMKV } from 'react-native-mmkv';
 import Icon from 'react-native-vector-icons/FontAwesome';
+import SuccessModal from '../components/SuccessModal';
 
 interface BeepCardsScreenProps {
   navigation: NavigationProp<any>;
@@ -18,6 +19,7 @@ const AddBeepCardScreen: React.FC<BeepCardsScreenProps> = ({ navigation }) => {
   const [beepCardNumberError, setBeepCardNumberError] = useState('');
   const [cardLabelError, setCardLabelError] = useState('');
   const [isButtonDisabled, setIsButtonDisabled] = useState(true);
+  const [successModalVisible, setSuccessModalVisible] = useState(false); // State for success modal
   const mmkv = new MMKV();
   const theme = useTheme();
 
@@ -30,8 +32,8 @@ const AddBeepCardScreen: React.FC<BeepCardsScreenProps> = ({ navigation }) => {
       mmkv.set(beepCardNumber, cardLabel);
 
       if (linkedBeepCard) {
+        setSuccessModalVisible(true)
         console.log('Beep card linked:', linkedBeepCard);
-        navigation.goBack();
       } else {
         console.log('Beep card not found.');
         setBeepCardNumberError('Beep card not found.');
@@ -123,6 +125,14 @@ const AddBeepCardScreen: React.FC<BeepCardsScreenProps> = ({ navigation }) => {
           Save Card
         </Button>
       </View>
+      <SuccessModal
+        visible={successModalVisible}
+        linkedBeepCard={beepCardNumber} // Pass linkedBeepCard to the SuccessModal
+        onClose={() => {
+          setSuccessModalVisible(false);
+          navigation.goBack(); // Navigate back when modal is closed
+        }}
+      />
       <Toast />
     </View>
   );

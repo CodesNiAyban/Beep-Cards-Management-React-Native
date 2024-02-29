@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
+import { Button as PaperButton } from 'react-native-paper';
 
 interface PinInputProps {
   pinLength: number;
@@ -10,20 +11,17 @@ interface PinInputProps {
 const CustomPinKeyboard: React.FC<PinInputProps> = ({ pinLength, onInputChange, storedPin }) => {
   const [pin, setPin] = useState('');
 
-  useEffect(() => {
-    // Reset pin input if the stored pin is updated
-    setPin('');
-  }, [storedPin]);
-
   const handlePinInput = (digit: string) => {
-    const newPin = pin + digit;
-    if (newPin.length <= pinLength) {
-      setPin(newPin);
-      onInputChange(newPin);
-    }
+    if (digit === 'backspace') {
+      setPin(pin.slice(0, -1)); // Remove the last character from the pin
+    } else {
+      const newPin = pin + digit;
+      if (newPin.length <= pinLength) {
+        setPin(newPin);
+        onInputChange(newPin);
+      }
 
-    if (newPin.length === pinLength) {
-      if (!(newPin === storedPin)) {
+      if (newPin.length === pinLength && newPin !== storedPin) {
         setPin('');
       }
     }
@@ -34,7 +32,7 @@ const CustomPinKeyboard: React.FC<PinInputProps> = ({ pinLength, onInputChange, 
     const circles = [];
     for (let i = 0; i < pinLength; i++) {
       circles.push(
-        <View key={i} style={[styles.circle, pin.length > i ? styles.circleFilled : null]} />
+        <View key={i} style={[styles.circle, pin.length > i ? styles.circleFilled : null, pin.length === i ? styles.activeCircle : null]} />
       );
     }
     return circles;
@@ -42,35 +40,38 @@ const CustomPinKeyboard: React.FC<PinInputProps> = ({ pinLength, onInputChange, 
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Enter Your PIN</Text>
+      <Text style={[styles.text, styles.title]}>Enter PIN</Text>
+      <Text style={[styles.text, styles.message]}>Enter 4-Digit PIN to access</Text>
       <View style={styles.pinContainer}>
         {renderCircles()}
       </View>
+      {/* Rows for digit buttons */}
       <View style={styles.row}>
         {[1, 2, 3].map((digit) => (
-          <TouchableOpacity key={digit} style={styles.button} onPress={() => handlePinInput(String(digit))}>
+          <PaperButton key={digit} style={[styles.button, styles.digitButton]} mode="contained" onPress={() => handlePinInput(String(digit))}>
             <Text style={styles.buttonText}>{digit}</Text>
-          </TouchableOpacity>
+          </PaperButton>
         ))}
       </View>
       <View style={styles.row}>
         {[4, 5, 6].map((digit) => (
-          <TouchableOpacity key={digit} style={styles.button} onPress={() => handlePinInput(String(digit))}>
+          <PaperButton key={digit} style={[styles.button, styles.digitButton]} mode="contained" onPress={() => handlePinInput(String(digit))}>
             <Text style={styles.buttonText}>{digit}</Text>
-          </TouchableOpacity>
+          </PaperButton>
         ))}
       </View>
       <View style={styles.row}>
         {[7, 8, 9].map((digit) => (
-          <TouchableOpacity key={digit} style={styles.button} onPress={() => handlePinInput(String(digit))}>
+          <PaperButton key={digit} style={[styles.button, styles.digitButton]} mode="contained" onPress={() => handlePinInput(String(digit))}>
             <Text style={styles.buttonText}>{digit}</Text>
-          </TouchableOpacity>
+          </PaperButton>
         ))}
       </View>
+      {/* Last row for '0' button and backspace icon */}
       <View style={styles.row}>
-        <TouchableOpacity style={styles.button} onPress={() => handlePinInput('0')}>
+        <PaperButton style={[styles.button, styles.digitButton]} mode="contained" onPress={() => handlePinInput('0')}>
           <Text style={styles.buttonText}>0</Text>
-        </TouchableOpacity>
+        </PaperButton>
       </View>
     </View>
   );
@@ -81,57 +82,63 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 10,
-    backgroundColor: '#EDF3FF', // Orange background color
   },
   pinContainer: {
     flexDirection: 'row',
     marginBottom: 20,
   },
   circle: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: '#FEFCF3', // Default color for empty circle
+    width: 30,
+    height: 30,
+    borderRadius: 20,
+    backgroundColor: '#EAEAEA',
     borderWidth: 0.5,
     borderColor: '#000',
     margin: 5,
+    transform: [{ scale: 0.5 }],
   },
   circleFilled: {
-    backgroundColor: '#65647C', // Orange color for filled circle
+    backgroundColor: '#172459',
+  },
+  activeCircle: {
+    transform: [{ scale: 0.7 }],
   },
   row: {
     flexDirection: 'row',
     marginBottom: 10,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    color: '#FFFFFF', // White text color
-  },
   button: {
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#DDDDDD',
-    width: 80,
-    height: 80,
+    width: 60,
+    height: 60,
     margin: 5,
-    borderRadius: 40,
-    borderWidth: 2,
-    borderColor: '#FFF', // Outline color
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    borderRadius: 30,
+    elevation: 2,
+    backgroundColor: '#DDDDDD',
+  },
+  digitButton: {
+    backgroundColor: '#FFFFFF',
   },
   buttonText: {
-    fontSize: 24,
-    color: '#000', // Black text color
+    fontWeight: '600',
+    fontSize: 18,
+    color: '#333',
+  },
+  text: {
+    color: '#ffffff',
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    color: '#fff',
+  },
+  message: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 50,
+    color: '#fff',
   },
 });
 
