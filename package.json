@@ -33,6 +33,7 @@
     "react-native-vector-icons": "^10.0.3",
     "react-native-vision-camera": "^3.9.0",
     "react-native-worklets-core": "^0.3.0",
+    "socket.io-client": "^4.7.4",
     "toastify-react-native": "^5.0.0"
   },
   "devDependencies": {
@@ -55,5 +56,9 @@
   },
   "engines": {
     "node": ">=18"
+  },
+  "optionalDependencies": {
+    "bufferutil": "^4.0.8",
+    "utf-8-validate": "^5.0.10"
   }
 }

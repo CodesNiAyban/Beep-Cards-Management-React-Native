@@ -2,14 +2,14 @@ import { BeepCardItem as BeepCard, BeepCardItem } from '../models/beepCardsModel
 import { TransactionItem as Transaction } from '../models/TransactionsModel';
 import { fetchData } from './Fetcher';
 
-const DEVELOPMENT_URL = process.env.DEVELOPMENT_URL;
+const MRT_ONLINE_API_URL = process.env.DEVELOPMENT_URL;
 // const DEVELOPMENT_URL = 'http://10.200.53.60:5000';
 
 
 export async function fetchBeepCard(userId: string): Promise<BeepCard[]> {
-    console.log(`${DEVELOPMENT_URL}/api/beepCardManager/${userId}`);
+    console.log(`${MRT_ONLINE_API_URL}/api/beepCardManager/${userId}`);
     try {
-        const response = await fetchData(`${DEVELOPMENT_URL}/api/beepCardManager/${userId}`, {
+        const response = await fetchData(`${MRT_ONLINE_API_URL}/api/beepCardManager/${userId}`, {
             method: 'GET',
         });
 
@@ -27,7 +27,7 @@ export async function fetchBeepCard(userId: string): Promise<BeepCard[]> {
 
 export async function linkBeepCard(userID: string, beepCard: string): Promise<BeepCardItem | null> {
     try {
-        const response = await fetchData(`${DEVELOPMENT_URL}/api/beepCardManager/link/${beepCard}`, {
+        const response = await fetchData(`${MRT_ONLINE_API_URL}/api/beepCardManager/link/${beepCard}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -50,7 +50,7 @@ export async function linkBeepCard(userID: string, beepCard: string): Promise<Be
 
 export async function deleteUser(userID: string, UUID: number): Promise<void> {
     try {
-        const response = await fetchData(`${DEVELOPMENT_URL}/api/beepCardManager/unlink/${UUID}`, {
+        const response = await fetchData(`${MRT_ONLINE_API_URL}/api/beepCardManager/unlink/${UUID}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -74,7 +74,7 @@ export async function deleteUser(userID: string, UUID: number): Promise<void> {
 
 export async function getTransactions(userID: string): Promise<Transaction[]> {
     try {
-        const response = await fetchData(`${DEVELOPMENT_URL}/api/beepCardManager/transactions/${userID}`, {
+        const response = await fetchData(`${MRT_ONLINE_API_URL}/api/beepCardManager/transactions/${userID}`, {
             method: 'GET',
         });
 
