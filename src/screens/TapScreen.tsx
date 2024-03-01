@@ -1,69 +1,165 @@
-// WebSocketTestScreen.tsx
-import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, StyleSheet } from 'react-native';
-import io from 'socket.io-client';
+import React, { useEffect, useState } from 'react';
+import { Button, View, StyleSheet, TouchableOpacity } from 'react-native';
+import { Text, TextInput } from 'react-native-paper';
+import io, { Socket } from 'socket.io-client';
+import { Camera, useCameraDevice, useCameraPermission, useCodeScanner } from 'react-native-vision-camera';
+import Icon from 'react-native-vector-icons/FontAwesome5';
 
 
-const MRT_ONLINE_API_URL = 'https://mrtonlineapi.onrender.com';
+interface Message {
+  room: string;
+  message: string;
+}
 
-const WebSocketTestScreen = () => {
-  const [message, setMessage] = useState('');
-  const [receivedMessage, setReceivedMessage] = useState('');
-  const [socket, setSocket] = useState<any>(null);
+const WebSocketTester = () => {
+  const [receivedMessage, setReceivedMessage] = useState<string | null>(null);
+  const [socket, setSocket] = useState<Socket | null>(null);
+  const [isConnected, setIsConnected] = useState<boolean>(false);
+  const [room, setRoom] = useState<string>('');
+  const [message, setMessage] = useState<string>('6378050000000');
+  const [showFrontCamera, setShowFrontCamera] = useState<boolean>(false); // State for toggling front/back camera
+  const { hasPermission, requestPermission } = useCameraPermission();
+  const device = useCameraDevice(showFrontCamera ? 'front' : 'back');
+  const codeScanner = useCodeScanner({
+    codeTypes: ['qr'],
+    onCodeScanned: (codes) => {
+      const { value } = codes[0];
+      setRoom(value || ''); // Set room to empty string if value is undefined
+      joinRoom();
+      sendMessage();
+    },
+  });
 
   useEffect(() => {
     // Connect to the WebSocket server
-    const newSocket = io(MRT_ONLINE_API_URL);
+    const newSocket = io('https://mrtonlineapi.onrender.com'); // Replace with your WebSocket server URL
     setSocket(newSocket);
 
     // Listen for messages from the server
-    newSocket.on('chat message', (msg: string) => {
+    newSocket.on('message', (msg: string) => {
       setReceivedMessage(msg);
     });
 
+    // Set connection status
+    newSocket.on('connect', () => {
+      setIsConnected(true);
+    });
+    newSocket.on('disconnect', () => {
+      setIsConnected(false);
+    });
+
     return () => {
-      // Close the WebSocket connection when component unmounts
-      newSocket.disconnect();
+      // Disconnect WebSocket connection when component unmounts
+      if (newSocket) {
+        newSocket.disconnect();
+      }
     };
   }, []);
 
   const sendMessage = () => {
-    // Send the message to the server
-    if (socket) {
-      socket.emit('chat message', message);
-      setMessage('');
+    // Send a message to the server
+    if (socket && room && message) {
+      const data: Message = { room, message };
+      socket.emit('messageToRoom', data);
     }
+  };
+
+  const joinRoom = () => {
+    // Join a room
+    if (socket && room) {
+      socket.emit('joinRoom', room);
+    }
+  };
+
+  const leaveRoom = () => {
+    // Leave a room
+    if (socket && room) {
+      socket.emit('leaveRoom', room);
+    }
+  };
+
+  const toggleCamera = async () => {
+    if (!hasPermission) {
+      await requestPermission();
+    }
+    setShowFrontCamera(prevState => !prevState); // Toggle camera between front and back
   };
 
   return (
     <View style={styles.container}>
+      <Text style={styles.title}>WebSocket Tester</Text>
+      <View style={styles.cameraContainer}>
+        <Camera style={styles.camera} device={device!} isActive={true} codeScanner={codeScanner} />
+      </View>
       <TextInput
-        style={styles.input}
-        placeholder="Type your message"
+        label="Message"
         value={message}
         onChangeText={setMessage}
+        style={styles.input}
       />
-      <Button title="Send Message" onPress={sendMessage} />
-      <Text style={styles.receivedMessage}>Received message: {receivedMessage}</Text>
+      <Button title="Leave Room" onPress={leaveRoom} disabled={!isConnected || !room} />
+      <Button
+        title="Send Message to Room"
+        onPress={sendMessage}
+        disabled={!isConnected || !room || !message}
+      />
+      <TouchableOpacity style={styles.toggleCameraButton} onPress={toggleCamera}>
+        <Icon name={showFrontCamera ? 'camera-retro' : 'camera'} size={24} color="black" />
+      </TouchableOpacity>
+      <View style={styles.statusContainer}>
+        <Text style={styles.status}>
+          {isConnected ? 'Connected to WebSocket server' : 'Not connected to WebSocket server'}
+        </Text>
+        {receivedMessage && <Text style={styles.receivedMessage}>Received message: {receivedMessage}</Text>}
+      </View>
     </View>
   );
 };
+
+export default WebSocketTester;
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    padding: 20,
+  },
+  title: {
+    color: 'black',
+    marginBottom: 10,
+    fontSize: 20,
+    fontWeight: 'bold',
   },
   input: {
-    borderWidth: 1,
-    padding: 10,
+    width: 200,
     marginBottom: 10,
-    width: '80%',
+  },
+  cameraContainer: {
+    width: '100%',
+    aspectRatio: 1, // Ensure the camera preview is square
+    overflow: 'hidden',
+    marginBottom: 10,
+  },
+  camera: {
+    width: '100%',
+    height: '100%',
+  },
+  toggleCameraButton: {
+    position: 'absolute',
+    top: 20,
+    right: 20,
+  },
+  statusContainer: {
+    marginTop: 20,
+    alignItems: 'center',
+  },
+  status: {
+    color: 'black',
+    marginTop: 10,
   },
   receivedMessage: {
-    marginTop: 20,
+    color: 'black',
+    marginTop: 10,
   },
 });
-
-export default WebSocketTestScreen;

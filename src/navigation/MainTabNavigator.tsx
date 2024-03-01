@@ -77,7 +77,7 @@ const MainTabNavigator = () => {
   const navigation = useNavigation<NativeStackNavigationProp<ParamListBase>>();
 
   const showAddBeepCardScreen = () => {
-    navigation.navigate('AddBeepCard');
+    navigation.navigate('Tap');
   };
 
   useEffect(() => {
@@ -188,12 +188,12 @@ const MainTabNavigator = () => {
           options={{
             tabBarLabel: 'Tap',
           }}
-          listeners={{
-            tabPress: e => {
-              // add your conditions here
-              e.preventDefault(); // <-- this function blocks navigating to screen
-            },
-          }}
+          // listeners={{
+          //   tabPress: e => {
+          //     // add your conditions here
+          //     e.preventDefault(); // <-- this function blocks navigating to screen
+          //   },
+          // }}
         />
         <Tab.Screen
           name="Transactions"
