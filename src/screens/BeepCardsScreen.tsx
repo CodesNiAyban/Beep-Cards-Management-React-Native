@@ -10,7 +10,8 @@ import { BeepCardItem as BeepCardsModel } from '../models/BeepCardsModel';
 import { TransactionItem as TransactionsModel } from '../models/TransactionsModel';
 import { deleteUser, fetchBeepCard, getTransactions } from '../network/BeepCardManagerAPI';
 import { MMKV } from 'react-native-mmkv';
-
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import { faTrash, faStar } from '@fortawesome/free-solid-svg-icons';
 
 interface BeepCardsScreenProps {
 	beepCards: BeepCardsModel[];
@@ -156,6 +157,20 @@ const BeepCardsScreen: React.FC<BeepCardsScreenProps> = ({ beepCards, setBeepCar
 			}));
 		};
 
+		const handleStarPress = () => {
+			const selectedCard = mmkv.getString('selectedBeepCard');
+			if (selectedCard === item.UUIC.toString()) {
+				// If the current card is already selected, deselect it
+				mmkv.delete('selectedBeepCard');
+			} else {
+				// Otherwise, select the current card
+				mmkv.set('selectedBeepCard', item.UUIC.toString());
+			}
+			// Call onRefresh to update the UI
+			onRefresh();
+		};
+
+
 		const renderNoTransactions = () => {
 			return (
 				<>
@@ -185,7 +200,14 @@ const BeepCardsScreen: React.FC<BeepCardsScreenProps> = ({ beepCards, setBeepCar
 							<View style={styles.cardHeader}>
 								<Text style={styles.cardHeaderText}>{item.UUIC}</Text>
 								<TouchableOpacity onPress={() => handleTrashPress(item)}>
-									<FontAwesome5 name="trash" size={18} color="#FD9A00" style={styles.trashIcon} />
+									<FontAwesomeIcon icon={faTrash} size={18} color="#FD9A00" style={styles.trashIcon} />
+								</TouchableOpacity>
+								<TouchableOpacity onPress={() => handleStarPress()}>
+									{item.UUIC.toString() === mmkv.getString('selectedBeepCard') ? (
+										<FontAwesomeIcon icon={faStar} size={18} color="#FFD700" style={styles.starIcon} />
+									) : (
+										<FontAwesome5 name={'star'} size={18} color="#FFD700" style={styles.starIcon} />
+									)}
 								</TouchableOpacity>
 							</View>
 							<View style={styles.cardDetails}>
@@ -505,6 +527,9 @@ const styles = StyleSheet.create({
 		color: '#FFFFFF',
 		marginBottom: 5,
 		fontFamily: 'Roboto',
+	},
+	starIcon: {
+		marginLeft: 'auto',
 	},
 });
 
