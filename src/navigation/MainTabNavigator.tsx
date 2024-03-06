@@ -2,7 +2,7 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationProp, ParamListBase, useNavigation } from '@react-navigation/native';
 import React, { useEffect, useState } from 'react';
-import { Image, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Image, StyleSheet, TouchableOpacity, View, AppState } from 'react-native';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import { BeepCardItem as BeepCardsModel } from '../models/BeepCardsModel';
 import { TransactionItem as TransactionsModel } from '../models/TransactionsModel';
@@ -14,7 +14,12 @@ import AccountScreen from '../screens/AccountScreen';
 import HomeScreen from '../screens/HomeScreen';
 import { Text } from 'react-native-paper';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import DeviceInfo from 'react-native-device-info';
+import SimpleToast from 'react-native-simple-toast'; // Import SimpleToast
+import { MMKV } from 'react-native-mmkv';
+import BackgroundTimer from 'react-native-background-timer';
+import { LogBox } from 'react-native';
+LogBox.ignoreLogs(['new NativeEventEmitter']); // Ignore log notification by message
+LogBox.ignoreAllLogs(); //Ignore all log notifications
 
 const Tab = createBottomTabNavigator();
 
@@ -71,30 +76,92 @@ const AddBeepCardButton: React.FC<AddBeepCardButtonProps> = ({ onPress, navigati
 );
 
 const MainTabNavigator = () => {
-  const [isModalVisible, setIsModalVisible] = useState(false);
   const [beepCards, setBeepCards] = useState<BeepCardsModel[]>([]);
   const [transactions, setTransactions] = useState<TransactionsModel[]>([]);
   const navigation = useNavigation<NativeStackNavigationProp<ParamListBase>>();
+  const [appState, setAppState] = useState(AppState.currentState);
+  const [timerInactive, setTimerInactive] = useState(3000); // Timeout for inactive/background
+  const [timerActive, setTimerActive] = useState(10000); // Timeout for active
+  const mmkv = new MMKV();
+  let backgroundTimer: number | null = null;
+  let activityTimer: number | null = null; // Timer for active state
+  const androidID = mmkv.getString('phoneID');
 
   const showAddBeepCardScreen = () => {
-    navigation.navigate('Tap');
+    navigation.navigate('AddBeepCard');
+  };
+
+  const showTapScreen = () => {
+    const selectedBeepCard = mmkv.getString('selectedBeepCard');
+    if (selectedBeepCard) {
+      navigation.navigate('Tap');
+    } else {
+      SimpleToast.show('Select a beep™ card first', SimpleToast.SHORT, { tapToDismissEnabled: true, backgroundColor: '#172459' });
+    }
   };
 
   useEffect(() => {
-    const unsubscribe = navigation.addListener('beforeRemove', (e) => {
-      e.preventDefault();
-    });
+    const navigateToPinScreen = () => {
+      navigation.navigate('Pin');
+    };
 
-    return unsubscribe;
-  }, [navigation]);
+    const resetInactivityTimer = () => {
+      if (backgroundTimer) {
+        BackgroundTimer.stop;
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        backgroundTimer = null; // Reset backgroundTimer
+      } else {
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        backgroundTimer = BackgroundTimer.setInterval(() => {
+          SimpleToast.show('Logged out, app is inactive.', SimpleToast.SHORT, { tapToDismissEnabled: true, backgroundColor: '#172459' });
+          navigateToPinScreen();
+        }, timerInactive); // Use timerInactive for inactive/background timeout
+      }
+    };
+
+    const resetActivityTimer = () => {
+      if (activityTimer) {
+        BackgroundTimer.clearInterval(activityTimer);
+        activityTimer = null; // Reset activityTimer
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      activityTimer = BackgroundTimer.setTimeout(() => {
+        SimpleToast.show('Logged out due to inactivity.', SimpleToast.SHORT, { tapToDismissEnabled: true, backgroundColor: '#172459' });
+        navigateToPinScreen();
+      }, timerActive); // Use timerActive for active timeout
+    };
+
+    const handleAppStateChange = (nextAppState: any) => {
+      if (appState === 'active' && nextAppState.match(/inactive|background/)) {
+        resetInactivityTimer(); // Reset timer only when going from active to background/inactive
+      } else if (appState.match(/inactive|background/) && nextAppState === 'active') {
+        resetActivityTimer(); // Reset timer only when going from background/inactive to active
+      }
+      setAppState(nextAppState);
+    };
+
+    const unsubscribe = AppState.addEventListener('change', handleAppStateChange);
+
+    return () => {
+      unsubscribe.remove(); // Use remove method to unsubscribe
+      if (backgroundTimer) {
+        BackgroundTimer.clearInterval(backgroundTimer);
+        backgroundTimer = null;
+      }
+      if (activityTimer) {
+        BackgroundTimer.clearTimeout(activityTimer);
+        activityTimer = null;
+      }
+    };
+  }, [navigation, timerInactive, timerActive]);
+
 
   useEffect(() => {
     const fetchBeepCardsData = async () => {
       try {
         console.log('Nagfetch');
-        const androidID = await DeviceInfo.getAndroidId();
-        const data = await fetchBeepCard(androidID);
-        const transactionData = await getTransactions(androidID);
+        const data = await fetchBeepCard(androidID!);
+        const transactionData = await getTransactions(androidID!);
         setBeepCards(data);
         if (transactionData) {
           setTransactions(transactionData);
@@ -107,7 +174,7 @@ const MainTabNavigator = () => {
     };
 
     fetchBeepCardsData();
-  }, [navigation, isModalVisible, setIsModalVisible, setBeepCards]);
+  }, [androidID]);
 
   return (
     <View style={screenContainerStyle}>
@@ -188,12 +255,6 @@ const MainTabNavigator = () => {
           options={{
             tabBarLabel: 'Tap',
           }}
-          // listeners={{
-          //   tabPress: e => {
-          //     // add your conditions here
-          //     e.preventDefault(); // <-- this function blocks navigating to screen
-          //   },
-          // }}
         />
         <Tab.Screen
           name="Transactions"
@@ -214,7 +275,7 @@ const MainTabNavigator = () => {
         />
       </Tab.Navigator>
 
-      <AddBeepCardButton onPress={showAddBeepCardScreen} navigation={navigation} />
+      <AddBeepCardButton onPress={showTapScreen} navigation={navigation} />
     </View>
   );
 };

@@ -1,3 +1,4 @@
+import { Socket, io } from 'socket.io-client';
 import { BeepCardItem as BeepCard, BeepCardItem } from '../models/beepCardsModel';
 import { TransactionItem as Transaction } from '../models/TransactionsModel';
 import { fetchData } from './Fetcher';
@@ -83,5 +84,16 @@ export async function getTransactions(userID: string): Promise<Transaction[]> {
         // Handle other errors if needed
         console.log('Error fetching transaction:', error);
         return []; // You can choose to throw or handle the error based on your requirements
+    }
+}
+
+export async function connectWebsocket(): Promise<Socket | null> {
+    try {
+        const newSocket = io(`${MRT_ONLINE_API_URL}`); // Use the MRT_API variable
+
+        return newSocket;
+    } catch (error) {
+        console.error('Error connecting to WebSocket:', error);
+        return null; // Return null if there's an error
     }
 }

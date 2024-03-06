@@ -1,185 +1,280 @@
-import React, { useEffect, useState } from 'react';
-import { Button, View, StyleSheet, TouchableOpacity } from 'react-native';
-import { Text, TextInput } from 'react-native-paper';
-import io, { Socket } from 'socket.io-client';
-import { Camera, useCameraDevice, useCameraPermission, useCodeScanner } from 'react-native-vision-camera';
-import Icon from 'react-native-vector-icons/FontAwesome5';
 import { useIsFocused } from '@react-navigation/native';
+import React, { useEffect, useState } from 'react';
+import { RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { RNHoleView } from 'react-native-hole-view';
 import { MMKV } from 'react-native-mmkv';
+import { Button, Text } from 'react-native-paper'; // Import Button from React Native Paper
+import SimpleToast from 'react-native-simple-toast';
+import Icon from 'react-native-vector-icons/FontAwesome5';
+import { Camera, useCameraDevice, useCameraPermission, useCodeScanner } from 'react-native-vision-camera';
+import { Socket } from 'socket.io-client';
+import { connectWebsocket } from '../network/BeepCardManagerAPI';
+import { NavigationProp } from '@react-navigation/native';
 
+// Define Message interface
 interface Message {
-	room: string;
-	message: string;
+    room: string;
+    message: string;
 }
 
-const WebSocketTester = () => {
-	const [receivedMessage, setReceivedMessage] = useState<string | null>(null);
-	const [socket, setSocket] = useState<Socket | null>(null);
-	const [isConnected, setIsConnected] = useState<boolean>(false);
-	const [room, setRoom] = useState<string>('');
-	const [message, setMessage] = useState<string>('');
-	const [showFrontCamera, setShowFrontCamera] = useState<boolean>(false); // State for toggling front/back camera
-	const [cameraOn, setCameraOn] = useState<boolean>(true);
-	const { hasPermission, requestPermission } = useCameraPermission();
-	const device = useCameraDevice(showFrontCamera ? 'front' : 'back');
-	const isFocused = useIsFocused();
-	const mmkv = new MMKV();
+interface TapScreenProps {
+	navigation: NavigationProp<any>;
+  }
 
-	const codeScanner = useCodeScanner({
-		codeTypes: ['qr'],
-		onCodeScanned: (codes) => {
-			const { value } = codes[0];
-			setRoom(value || ''); // Set room to empty string if value is undefined
-			joinRoom();
-			sendMessage();
-		},
-	});
+const WebSocketTester: React.FC<TapScreenProps> = ({ navigation }) => {
+    const [socket, setSocket] = useState<Socket | null>(null);
+    const [isConnected, setIsConnected] = useState<boolean>(false);
+    const [room, setRoom] = useState<string>('');
+    const [message, setMessage] = useState<string>('');
+    const [showFrontCamera, setShowFrontCamera] = useState<boolean>(false);
+    const [cameraOn, setCameraOn] = useState<boolean>(false);
+    const { hasPermission, requestPermission } = useCameraPermission();
+    const device = useCameraDevice(showFrontCamera ? 'front' : 'back');
+    const isFocused = useIsFocused();
+    const mmkv = new MMKV();
+    const [refreshing, setRefreshing] = useState(false);
+    const [reconnectLoading, setReconnectLoading] = useState(false); // Add state for reconnect button loading
 
-	useEffect(() => {
-		if (isFocused) {
-			setCameraOn(true); // Reset onScanned state when screen is focused
-			setMessage(mmkv.getString('selectedBeepCard')?.toString() || '');
-		}
-	// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [isFocused]);
+    const codeScanner = useCodeScanner({
+        codeTypes: ['qr'],
+        onCodeScanned: (codes) => {
+            const { value } = codes[0];
+            const scannedValue = value;
 
-	useEffect(() => {
-		// Connect to the WebSocket server
-		const newSocket = io('http://192.168.64.240:5000'); // Replace with your WebSocket server URL
-		setSocket(newSocket);
+            let corners = codes[0].corners;
 
-		// Listen for messages from the server
-		newSocket.on('message', (msg: string) => {
-			setCameraOn(false);
-			setReceivedMessage(msg);
-		});
+            const scanRegionCoordinates = {
+                minX: 500,
+                minY: 130,
+                maxX: 688,
+                maxY: 947,
+            };
 
-		// Set connection status
-		newSocket.on('connect', () => {
-			setIsConnected(true);
-		});
-		newSocket.on('disconnect', () => {
-			setIsConnected(false);
-		});
+            const allCornersWithinRegion = corners!.every(corner => {
+                return (
+                    corner.x >= scanRegionCoordinates.minX &&
+                    corner.y >= scanRegionCoordinates.minY &&
+                    corner.x <= scanRegionCoordinates.maxX &&
+                    corner.y <= scanRegionCoordinates.maxY
+                );
+            });
+            if (allCornersWithinRegion) {
+                if (isValidUUID(scannedValue!)) {
+                    console.log(scannedValue);
+                    setRoom(value || '');
+                    joinRoom();
+                    sendMessage();
+                    setCameraOn(false);
+					SimpleToast.show('Tap Success!', SimpleToast.LONG, { tapToDismissEnabled: true, backgroundColor: '#172459' });
+                } else {
+                    SimpleToast.show('Invalid QR Code', SimpleToast.LONG, { tapToDismissEnabled: true, backgroundColor: '#172459' });
+                    setCameraOn(false);
+                }
+            } else {
+                // console.log('Invalid UUID number: ', scannedValue);
+            }
+        },
+    });
 
-		return () => {
-			// Disconnect WebSocket connection when component unmounts
-			if (newSocket) {
-				newSocket.disconnect();
-			}
-		};
-	}, []);
+    const isValidUUID = (value: string) => {
+        const uuidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/;
+        return uuidRegex.test(value);
+    };
 
-	const sendMessage = () => {
-		// Send a message to the server
-		if (socket && room && message) {
-			const data: Message = { room, message };
-			socket.emit('messageToRoom', data);
-		}
-	};
+    const fetchSelectecBeepCard = async () => {
+        if (isFocused) {
+            setMessage(mmkv.getString('selectedBeepCard')?.toString() || '');
+        }
+    };
 
-	const joinRoom = () => {
-		// Join a room
-		if (socket && room) {
-			socket.emit('joinRoom', room);
-		}
-	};
+    useEffect(() => {
+        handleRefresh();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isFocused]);
 
-	const leaveRoom = () => {
-		// Leave a room
-		if (socket && room) {
-			socket.emit('leaveRoom', room);
-		}
-	};
+    const initializeSocket = async () => {
+        const newSocket = await connectWebsocket();
+        setSocket(newSocket);
 
-	const toggleCamera = async () => {
-		if (!hasPermission) {
-			await requestPermission();
-		}
-		setShowFrontCamera(prevState => !prevState); // Toggle camera between front and back
-	};
+        newSocket!.on('message', () => {
+            setCameraOn(false);
+        });
 
-	return (
-		<View style={styles.container}>
-			<Text style={styles.title}>WebSocket Tester</Text>
-			{cameraOn &&
-				<View style={styles.cameraContainer}>
-					<Camera style={styles.camera}
-						device={device!}
-						isActive={cameraOn}
-						codeScanner={codeScanner} />
-				</View>
-			}
+        newSocket!.on('connect', async () => {
+            setRefreshing(false);
+            setIsConnected(true);
+            if (hasPermission) {
+                setCameraOn(true);
+            } else {
+                if (await requestPermission()) {
+                    setCameraOn(true);
+                } else {
+                    newSocket!.disconnect();
+                }
+            }
+        });
+        newSocket!.on('disconnect', () => {
+            setIsConnected(false);
+        });
 
-			<TextInput
-				label="Message"
-				value={message}
-				onChangeText={setMessage}
-				style={styles.input}
-			/>
-			<Button title="Leave Room" onPress={leaveRoom} disabled={!isConnected || !room} />
-			<Button
-				title="Send Message to Room"
-				onPress={sendMessage}
-				disabled={!isConnected || !room || !message}
-			/>
-			<TouchableOpacity style={styles.toggleCameraButton} onPress={toggleCamera}>
-				<Icon name={showFrontCamera ? 'camera-retro' : 'camera'} size={24} color="black" />
-			</TouchableOpacity>
-			<View style={styles.statusContainer}>
-				<Text style={styles.status}>
-					{isConnected ? 'Connected to WebSocket server' : 'Not connected to WebSocket server'}
-				</Text>
-				{receivedMessage && <Text style={styles.receivedMessage}>Received message: {receivedMessage}</Text>}
-			</View>
-		</View>
-	);
+        return () => {
+            if (newSocket) {
+                newSocket.disconnect();
+            }
+        };
+    };
+
+    useEffect(() => {
+        setRefreshing(true);
+    }, []);
+
+    const sendMessage = () => {
+        if (socket && room && message) {
+            const data: Message = { room, message };
+            socket.emit('messageToRoom', data);
+			navigation.goBack();
+        }
+    };
+
+    const joinRoom = () => {
+        if (socket && room) {
+            socket.emit('joinRoom', room);
+        }
+    };
+
+    const switchCamera = () => {
+        setShowFrontCamera(prevState => !prevState);
+    };
+
+    const handleReconnect = async () => {
+        setReconnectLoading(true); // Start loading
+        await handleRefresh(); // Refresh the connection
+        setReconnectLoading(false); // Stop loading
+    };
+
+    const handleRefresh = () => {
+        fetchSelectecBeepCard();
+        setRefreshing(true);
+        initializeSocket();
+    };
+
+    return (
+        <ScrollView
+            contentContainerStyle={styles.scrollView}
+            refreshControl={
+                <RefreshControl
+                    refreshing={refreshing}
+                    onRefresh={handleRefresh}
+                />
+            }
+        >
+            <View style={styles.container}>
+                {isConnected && cameraOn ? (
+                    <>
+                        <Camera
+                            style={styles.camera}
+                            device={device!}
+                            isActive={true}
+                            codeScanner={codeScanner}
+                        />
+                        <RNHoleView style={styles.maskView} holes={[{ x: 70, y: 190, width: 250, height: 250, borderRadius: 60 }]} />
+                        <View style={styles.qrLabel}>
+                            <Text style={styles.qrLabelText}>beep™ Tap</Text>
+                        </View>
+                        <View style={styles.scanRegion} />
+                        <TouchableOpacity style={styles.toggleCameraContainer} onPress={switchCamera}>
+                            <Icon name="exchange-alt" size={23} color="#172459" />
+                        </TouchableOpacity>
+                    </>
+                ) : (
+                    <View style={styles.statusContainer}>
+                        <Text style={styles.status}>
+                            Not Connected to MRT Tap
+                        </Text>
+                        <Text style={styles.status}>
+                            Drag Down to Refresh
+                        </Text>
+                        <Button
+                            mode="contained"
+                            onPress={handleReconnect}
+                            loading={reconnectLoading}
+                            disabled={reconnectLoading} // Disable the button when loading
+                        >
+                            {reconnectLoading ? 'Connecting...' : 'Reconnect'}
+                        </Button>
+                    </View>
+                )}
+            </View>
+        </ScrollView>
+    );
 };
 
 export default WebSocketTester;
 
 const styles = StyleSheet.create({
-	container: {
-		flex: 1,
-		justifyContent: 'center',
-		alignItems: 'center',
-		padding: 20,
-	},
-	title: {
-		color: 'black',
-		marginBottom: 10,
-		fontSize: 20,
-		fontWeight: 'bold',
-	},
-	input: {
-		width: 200,
-		marginBottom: 10,
-	},
-	cameraContainer: {
-		width: '100%',
-		aspectRatio: 1, // Ensure the camera preview is square
-		overflow: 'hidden',
-		marginBottom: 10,
-	},
-	camera: {
-		width: '100%',
-		height: '100%',
-	},
-	toggleCameraButton: {
-		position: 'absolute',
-		top: 20,
-		right: 20,
-	},
-	statusContainer: {
-		marginTop: 20,
-		alignItems: 'center',
-	},
-	status: {
-		color: 'black',
-		marginTop: 10,
-	},
-	receivedMessage: {
-		color: 'black',
-		marginTop: 10,
-	},
+    container: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    scrollView: {
+        flexGrow: 1,
+        justifyContent: 'center',
+    },
+    camera: {
+        flex: 1,
+        width: '100%',
+        zIndex: -1,
+    },
+    qrLabel: {
+        position: 'absolute',
+        top: 20,
+        left: 20,
+        padding: 10,
+        backgroundColor: '#172459',
+        opacity: 0.8,
+        borderRadius: 5,
+    },
+    qrLabelText: {
+        color: '#FFFFFF',
+        fontSize: 14,
+    },
+    scanRegion: {
+        position: 'absolute',
+        left: 69.5,
+        top: 190,
+        width: 250,
+        height: 250,
+        borderWidth: 3.5,
+        borderColor: '#FFFFFF',
+        borderRadius: 60,
+        borderStyle: 'dashed',
+        opacity: 0.5,
+    },
+    toggleCameraContainer: {
+        position: 'absolute',
+        top: 20,
+        right: 20,
+        borderWidth: 1,
+        borderRadius: 5,
+        padding: 5,
+        backgroundColor: '#EDF3FF',
+        borderColor: '#172459',
+    },
+    maskView: {
+        position: 'absolute',
+        width: '100%',
+        height: '100%',
+        backgroundColor: 'black',
+        opacity: 0.55,
+        zIndex: 0,
+    },
+    statusContainer: {
+        marginTop: 20,
+        alignItems: 'center',
+    },
+    status: {
+        color: 'black',
+        marginTop: 10,
+    },
 });

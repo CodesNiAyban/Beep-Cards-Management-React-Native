@@ -1,16 +1,17 @@
+import { NavigationProp } from '@react-navigation/native';
 import React, { useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Card, Divider, Title } from 'react-native-paper';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import { TransactionItem as TransactionsModel } from '../models/TransactionsModel';
-import { NavigationProp } from '@react-navigation/native';
 import { BeepCardItem as BeepCardsModel } from '../models/beepCardsModel';
 
 interface TransactionScreenProps {
-	beepCards: BeepCardsModel[];
-	setBeepCards: React.Dispatch<React.SetStateAction<BeepCardsModel[]>>;
-	transactions: TransactionsModel[]; // Array of transaction objects
-	setTransactions: React.Dispatch<React.SetStateAction<TransactionsModel[]>>; // Function to update transactions state
-	navigation: NavigationProp<any>;
+  beepCards: BeepCardsModel[];
+  setBeepCards: React.Dispatch<React.SetStateAction<BeepCardsModel[]>>;
+  transactions: TransactionsModel[]; // Array of transaction objects
+  setTransactions: React.Dispatch<React.SetStateAction<TransactionsModel[]>>; // Function to update transactions state
+  navigation: NavigationProp<any>;
 }
 
 
@@ -19,7 +20,7 @@ const TransactionScreen: React.FC<TransactionScreenProps> = ({ beepCards, setBee
   const [expandedGroups, setExpandedGroups] = useState<{ [key: string]: boolean }>({});
 
   const groupedTransactions = transactions.reduce((acc, transaction) => {
-    const date = new Date(transaction.createdAt).toLocaleDateString();
+    const date = new Date(transaction.createdAt).toISOString().split('T')[0]; // Extracting only the date part
     if (!acc[date]) {
       acc[date] = [];
     }
@@ -35,35 +36,89 @@ const TransactionScreen: React.FC<TransactionScreenProps> = ({ beepCards, setBee
   };
 
   const renderItem = ({ item }: { item: TransactionsModel }) => {
-    const transactionTime = new Date(item.createdAt);
-    const transactionTimeFormatted = `${transactionTime.getHours().toString().padStart(2, '0')}:${transactionTime.getMinutes().toString().padStart(2, '0')}:${transactionTime.getSeconds().toString().padStart(2, '0')}`;
-
     return (
-      <View style={styles.transactionItem}>
-        <View style={styles.transactionIcon}>
-          <FontAwesome5 name={item.tapIn ? 'arrow-circle-up' : 'arrow-circle-down'} size={24} color="#FFF" />
-        </View>
-        <View style={styles.transactionDetails}>
-          <Text style={styles.text}>UUIC: {item.UUIC}</Text>
-          <Text style={styles.text}>Initial Balance: PhP {item.initialBalance}</Text>
-          <Text style={styles.text}>From: {item.prevStation}</Text>
-          <Text style={styles.text}>To: {item.currStation}</Text>
-          <Text style={styles.text}>Distance: {item.distance} km</Text>
-          <Text style={styles.text}>Fare: -PhP {item.fare}</Text>
-          <Text style={styles.text}>Current Balance: PhP {item.currBalance}</Text>
-          <Text style={styles.text}>Time: {transactionTimeFormatted}</Text>
-        </View>
-      </View>
+      <Card style={styles.card}>
+        <Card.Content style={styles.content}>
+          <View style={styles.header}>
+            <FontAwesome5 name={item.tapIn ? 'arrow-circle-down' : 'arrow-circle-up'} size={24} color="#000" style={styles.icon} />
+            <Title style={styles.headerText}>{item.tapIn ? 'TapIn' : 'TapOut'}</Title>
+          </View>
+          <Text style={styles.headerUUIC}>{item.UUIC}</Text>
+          <Divider style={styles.divider} />
+          <View style={styles.grid}>
+            <View>
+              <Text style={styles.boldText}>Initial Balance</Text>
+              <Text style={styles.subText}>{item.initialBalance}</Text>
+              <Text style={styles.boldText}>From Station</Text>
+              <Text style={styles.subText}>{item.prevStation}</Text>
+            </View>
+            <View style={styles.textRight}>
+              <Text style={styles.boldText}>Current Balance</Text>
+              <Text style={styles.subText}>{item.currBalance}</Text>
+              <Text style={styles.boldText}>To Station</Text>
+              <Text style={styles.subText}>{item.currStation}</Text>
+            </View>
+          </View>
+          <Divider style={styles.divider} />
+          <View style={styles.grid}>
+            <View>
+              <Text style={styles.boldText}>Distance Traveled</Text>
+              <Text style={styles.subText}>{item.distance} km</Text>
+            </View>
+            <View style={styles.textRight}>
+              <Text style={styles.boldText}>Fare Charged</Text>
+              <Text style={styles.subText}>PhP -{item.fare}</Text>
+            </View>
+          </View>
+          <View style={styles.grid}>
+            <View>
+              <Text style={styles.boldText}>Time</Text>
+              <Text style={styles.subText}>{formatTime(item.createdAt.toString())}</Text>
+            </View>
+          </View>
+        </Card.Content>
+      </Card>
     );
   };
 
-  const renderDateHeader = (date: string) => (
-    <TouchableOpacity onPress={() => toggleGroup(date)} style={styles.dateHeaderContainer}>
-      <FontAwesome5 name="calendar" size={20} color="#fff" style={styles.marginLeft} />
-      <Text style={styles.dateHeaderText}>{date}</Text>
-      <FontAwesome5 name={expandedGroups[date] ? 'chevron-up' : 'chevron-down'} size={20} color="#fff" />
-    </TouchableOpacity>
-  );
+
+  const formatDate = (timestamp: string): string => {
+    const date = new Date(timestamp);
+    const options: Intl.DateTimeFormatOptions = {
+      month: 'long',
+      day: '2-digit',
+      year: 'numeric',
+    };
+    const formattedDate = date.toLocaleDateString('en-US', options);
+    return formattedDate;
+  };
+
+  const formatTime = (timestamp: string): string => {
+    const date = new Date(timestamp); // Assuming timestamp is in BSON format
+    const options: Intl.DateTimeFormatOptions = {
+      month: 'long',
+      day: '2-digit',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: 'numeric',
+      hour12: true,
+      timeZone: 'UTC',
+    };
+    const formattedDate = date.toLocaleDateString('en-US', options);
+    return formattedDate;
+  };
+
+
+  const renderDateHeader = (date: string) => {
+
+    return (
+      <TouchableOpacity onPress={() => toggleGroup(date)} style={styles.dateHeaderContainer}>
+        <FontAwesome5 name="calendar" size={20} color="#fff" style={styles.marginLeft} />
+        <Text style={styles.dateHeaderText}>{formatDate(date)}</Text>
+        <FontAwesome5 name={expandedGroups[date] ? 'chevron-up' : 'chevron-down'} size={20} color="#fff" />
+      </TouchableOpacity>
+    );
+  };
 
   const renderTransactionsForDate = (date: string) => {
     const transactionsForDate = groupedTransactions[date];
@@ -115,6 +170,53 @@ const styles = StyleSheet.create({
     backgroundColor: '#EDF3FF',
     padding: 20,
   },
+  card: {
+    margin: 10,
+    borderRadius: 10,
+    backgroundColor: '#fff',
+  },
+  content: {
+    padding: 12,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  headerText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  grid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  gridItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  subText: {
+    fontSize: 14,
+    color: '#333', // Change text color to black
+  },
+  headerUUIC: {
+    fontSize: 16,
+    color: '#333', // Change text color to black
+  },
+  boldText: {
+    fontWeight: 'bold',
+    color: '#333', // Change text color to black
+  },
+  textRight: {
+    alignItems: 'flex-end',
+  },
+  divider: {
+    marginVertical: 8,
+  },
+  icon: {
+    marginRight: 4,
+  },
   transactionItem: {
     flexDirection: 'row',
     backgroundColor: '#fff',
@@ -139,11 +241,6 @@ const styles = StyleSheet.create({
   },
   transactionDetails: {
     flex: 1,
-  },
-  text: {
-    fontSize: 16,
-    color: '#333',
-    marginBottom: 5,
   },
   dateHeaderContainer: {
     flexDirection: 'row',
@@ -171,11 +268,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#fff',
   },
-  divider: {
-    borderBottomColor: '#E0E0E0',
-    borderBottomWidth: 1,
-    marginVertical: 10,
-  },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -188,6 +280,12 @@ const styles = StyleSheet.create({
     color: '#fff',
     lineHeight: 30,
   },
+  text: {
+    fontSize: 16,
+    color: '#333',
+    marginBottom: 5,
+  },
 });
+
 
 export default TransactionScreen;

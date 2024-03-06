@@ -1,14 +1,12 @@
 import { NavigationProp } from '@react-navigation/native';
 import React, { useState } from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
-import DeviceInfo from 'react-native-device-info';
 import { MMKV } from 'react-native-mmkv';
 import { Button, Text, TextInput, useTheme } from 'react-native-paper';
-import Toast from 'react-native-toast-message';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import { Camera, useCameraDevice, useCameraPermission, useCodeScanner } from 'react-native-vision-camera';
-import SuccessModal from '../components/SuccessModal';
 import { linkBeepCard } from '../network/BeepCardManagerAPI';
+import SimpleToast from 'react-native-simple-toast'; // Import SimpleToast
 
 interface BeepCardsScreenProps {
   navigation: NavigationProp<any>;
@@ -20,10 +18,10 @@ const AddBeepCardScreen: React.FC<BeepCardsScreenProps> = ({ navigation }) => {
   const [beepCardNumberError, setBeepCardNumberError] = useState('');
   const [cardLabelError, setCardLabelError] = useState('');
   const [isButtonDisabled, setIsButtonDisabled] = useState(true);
-  const [successModalVisible, setSuccessModalVisible] = useState(false); // State for success modal
   const [showFrontCamera, setShowFrontCamera] = useState(false); // State for toggling front/back camera
   const { hasPermission, requestPermission } = useCameraPermission();
   const mmkv = new MMKV();
+  const androidID = mmkv.getString('phoneID');
   const theme = useTheme();
   const [cameraVisible, setCameraVisible] = useState(false); // State for toggling camera visibility
 
@@ -32,15 +30,35 @@ const AddBeepCardScreen: React.FC<BeepCardsScreenProps> = ({ navigation }) => {
   const codeScanner = useCodeScanner({
     codeTypes: ['qr'],
     onCodeScanned: (codes) => {
-      const {value} = codes[0];
+      const { value } = codes[0];
       const scannedValue = value;
-      if (isValidBeepCard(scannedValue!)) {
+
+      let corners = codes[0].corners;
+
+      // Define the coordinates defining the scan region
+      const scanRegionCoordinates = {
+        minX: 494,
+        minY: 240,
+        maxX: 733,
+        maxY: 497,
+      };
+
+      // Check if all corners of the code are within the scan region
+      const allCornersWithinRegion = corners!.every(corner => {
+        return (
+          corner.x >= scanRegionCoordinates.minX &&
+          corner.y >= scanRegionCoordinates.minY &&
+          corner.x <= scanRegionCoordinates.maxX &&
+          corner.y <= scanRegionCoordinates.maxY
+        );
+      });
+      if (isValidBeepCard(scannedValue!) && allCornersWithinRegion) {
         setBeepCardNumber(scannedValue!);
         setIsButtonDisabled(false);
         // Close camera after successful scan
         setCameraVisible(false);
       } else {
-        console.log('Invalid beep card number:', scannedValue);
+        console.log('Invalid beep™ card number: ', scannedValue);
       }
     },
   });
@@ -56,7 +74,6 @@ const AddBeepCardScreen: React.FC<BeepCardsScreenProps> = ({ navigation }) => {
 
   const toggleCamera = async () => {
     if (!hasPermission) {
-      await requestPermission();
       if (await requestPermission()) {
         setCameraVisible(!cameraVisible); // Ensure the camera is shown when toggling
       }
@@ -67,26 +84,21 @@ const AddBeepCardScreen: React.FC<BeepCardsScreenProps> = ({ navigation }) => {
 
   const handleSave = async () => {
     try {
-      const androidID = await DeviceInfo.getAndroidId();
-      const userID = androidID;
       const beepCard = { UUIC: beepCardNumber };
-      const linkedBeepCard = await linkBeepCard(userID, beepCard.UUIC);
+      const linkedBeepCard = await linkBeepCard(androidID!, beepCard.UUIC);
       mmkv.set(beepCardNumber, cardLabel);
 
       if (linkedBeepCard) {
-        setSuccessModalVisible(true);
         console.log('Beep card linked:', linkedBeepCard);
+        SimpleToast.show('beep™ card ' + linkedBeepCard.UUIC + ' added', SimpleToast.SHORT, {tapToDismissEnabled: true, backgroundColor: '#172459'}); // Show error toast
+        navigation.goBack();
       } else {
         console.log('Beep card not found.');
-        setBeepCardNumberError('Beep card not found.');
+        setBeepCardNumberError('beep™ card not found.');
         setIsButtonDisabled(true);
       }
     } catch (error) {
-      Toast.show({
-        type: 'error',
-        text1: 'Error',
-        text2: 'Failed to link beep card',
-      });
+      SimpleToast.show('Failed to link beep™ card', SimpleToast.SHORT, {tapToDismissEnabled: true, backgroundColor: '#172459'}); // Show error toast
     }
   };
 
@@ -191,15 +203,6 @@ const AddBeepCardScreen: React.FC<BeepCardsScreenProps> = ({ navigation }) => {
           Save Card
         </Button>
       </View>
-      <SuccessModal
-        visible={successModalVisible}
-        linkedBeepCard={beepCardNumber} // Pass linkedBeepCard to the SuccessModal
-        onClose={() => {
-          setSuccessModalVisible(false);
-          navigation.goBack(); // Navigate back when modal is closed
-        }}
-      />
-      <Toast />
     </View>
   );
 };
@@ -300,9 +303,9 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 69.5, // Adjust to position the scan region box at the center horizontally
     top: 90, // Adjust to position the scan region box at the center vertically
-    width: '65%',
-    height: '50%',
-    borderWidth: 2, // Adjust the border width as desired
+    width: 250,
+    height: 250,
+    borderWidth: 3.5, // Adjust the border width as desired
     borderColor: '#FFFFFF',
     borderRadius: 60, // Set to 0 to remove border radius
     borderStyle: 'dashed', // Use solid border style for a clear rectangle
@@ -323,6 +326,17 @@ const styles = StyleSheet.create({
     right: 10,
     top: '50%',
     transform: [{ translateY: -12 }], // Center the button vertically
+  },
+  inverseContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Adjust the opacity as desired
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1, // Ensure the container is above the camera view
   },
 });
 

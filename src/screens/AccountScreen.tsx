@@ -1,105 +1,144 @@
+/* eslint-disable react/no-unstable-nested-components */
+import { faClock, faKey, faMoon, faRedoAlt, faSignOutAlt, faTrashAlt, faUser } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import React from 'react';
-import { StyleSheet, View, Text } from 'react-native';
-import { Card, Title, Divider } from 'react-native-paper';
-import Icon from 'react-native-vector-icons/FontAwesome5';
+import { StyleSheet, View, TouchableOpacity } from 'react-native';
+import { Divider, IconButton, List, Switch, Text } from 'react-native-paper';
 
-export default function Component() {
+const SettingsScreen = () => {
+
+  const handleLogout = () => {
+    // Implement logout functionality
+  };
+
+  const handleChangeUsername = () => {
+    // Implement change username functionality
+  };
+
+  const handleChangePin = () => {
+    // Implement change pin functionality
+  };
+
+  const handleSetTimeout = () => {
+    // Implement set timeout functionality
+  };
+
+  const handleToggleDarkMode = () => {
+    // Implement toggle dark mode functionality
+  };
+
+  const handleResetAccount = () => {
+    // Implement reset account functionality
+  };
+
+  const handleDeleteAllData = () => {
+    // Implement delete all data functionality
+  };
+
   return (
-    <Card style={styles.card}>
-      <Card.Content style={styles.content}>
-        <View style={styles.header}>
-          <Icon name="receipt" size={24} color="#000" style={styles.icon} />
-          <Title style={styles.headerText}>Transaction ID</Title>
-        </View>
-        <Text style={styles.subText}>65cb960b0cada9cebb49b7dd</Text>
-        <View style={styles.grid}>
-          <View style={styles.gridItem}>
-            <Text>Tap In</Text>
-          </View>
-          <View style={styles.gridItem}>
-            <Text>Fare Charged</Text>
-          </View>
-        </View>
-        <View style={styles.grid}>
-          <View>
-            <Text style={styles.boldText}>Initial Balance</Text>
-            <Text>3391</Text>
-            <Text>alabang</Text>
-          </View>
-          <View style={styles.textRight}>
-            <Text style={styles.boldText}>Current Balance</Text>
-            <Text>3389</Text>
-            <Text>ayala</Text>
-          </View>
-        </View>
+    <View style={styles.container}>
+      <List.Section>
         <Divider style={styles.divider} />
-        <View style={styles.grid}>
-          <View>
-            <Text style={styles.boldText}>Distance Traveled</Text>
-            <Text>0.0 km</Text>
-          </View>
-          <View style={styles.textRight}>
-            <Text style={styles.boldText}>Fare Charged</Text>
-            <Text>$2.75</Text>
-          </View>
-        </View>
-        <View style={styles.grid}>
-          <View>
-            <Text style={styles.boldText}>Creation Date</Text>
-            <Text>2024-02-13, 12:00AM</Text>
-          </View>
-          <View style={styles.textRight}>
-            <Text style={styles.boldText}>Update Date</Text>
-            <Text>2024-02-13, 12:00AM</Text>
-          </View>
-        </View>
-      </Card.Content>
-    </Card>
+        <List.Accordion
+          title="Account Settings"
+          titleStyle={styles.groupTitle}
+          style={styles.groupContainer}
+        >
+          <Divider style={styles.divider} />
+          <List.Item
+            title={<Text style={styles.itemText}>Change Username</Text>}
+            left={() => <FontAwesomeIcon icon={faUser} style={styles.icon} />}
+            onPress={handleChangeUsername}
+          />
+          <List.Item
+            title={<Text style={styles.itemText}>Change PIN</Text>}
+            left={() => <FontAwesomeIcon icon={faKey} style={styles.icon} />}
+            onPress={handleChangePin}
+          />
+          <List.Item
+            title={<Text style={styles.itemText}>Set Timeout</Text>}
+            left={() => <FontAwesomeIcon icon={faClock} style={styles.icon} />}
+            onPress={handleSetTimeout}
+          />
+        </List.Accordion>
+        <Divider style={styles.divider} />
+        <List.Accordion
+          title="App Settings"
+          titleStyle={styles.groupTitle}
+          style={styles.groupContainer}
+        >
+          <Divider style={styles.divider} />
+          <List.Item
+            title={<Text style={styles.itemText}>Dark Mode</Text>}
+            left={() => <FontAwesomeIcon icon={faMoon} style={styles.icon} />}
+            right={() => <Switch value={false} onValueChange={handleToggleDarkMode} />}
+          />
+          <List.Item
+            title={<Text style={styles.itemText}>Reset Account</Text>}
+            left={() => <FontAwesomeIcon icon={faRedoAlt} style={styles.icon} />}
+            onPress={handleResetAccount}
+          />
+          <List.Item
+            title={<Text style={styles.itemText}>Delete All Data</Text>}
+            left={() => <FontAwesomeIcon icon={faTrashAlt} style={styles.icon} />}
+            onPress={handleDeleteAllData}
+          />
+        </List.Accordion>
+        <Divider style={styles.divider} />
+      </List.Section>
+      <TouchableOpacity onPress={handleLogout} style={styles.bottomContainer}>
+        <Text style={styles.logoutText}>Logout</Text>
+        <IconButton
+          icon={() => <FontAwesomeIcon icon={faSignOutAlt} size={18}/>}
+          size={24}
+          style={styles.logoutButton}
+        />
+      </TouchableOpacity>
+    </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  card: {
-    margin: 10,
-    borderRadius: 10,
-    backgroundColor: '#333',
+  container: {
+    flex: 1,
+    padding: 20,
+    backgroundColor: '#F4F4F4',
   },
-  content: {
-    padding: 12,
+  groupContainer: {
+    backgroundColor: '#EFEFEF',
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  headerText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  subText: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 8,
-  },
-  grid: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  gridItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  boldText: {
-    fontWeight: 'bold',
-  },
-  textRight: {
-    alignItems: 'flex-end',
-  },
-  divider: {
-    marginVertical: 8,
+  groupTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
   },
   icon: {
-    marginRight: 4,
+    fontSize: 18,
+    marginRight: 10,
+    marginLeft: 20,
+    alignSelf: 'center',
+  },
+  itemText: {
+    fontSize: 12,
+    color: '#333',
+  },
+  bottomContainer: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center', // Align items vertically
+    marginTop: 20,
+  },
+  logoutButton: {
+    alignSelf: 'flex-end',
+  },
+  logoutText: {
+    fontSize: 16,
+    color: '#DC3545', // Logout text color
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#999', // Divider color
   },
 });
+
+export default SettingsScreen;

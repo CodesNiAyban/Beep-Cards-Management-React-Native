@@ -8,6 +8,7 @@ interface PinInputProps {
   storedPin: string;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const CustomPinKeyboard: React.FC<PinInputProps> = ({ pinLength, onInputChange, storedPin }) => {
   const [pin, setPin] = useState('');
 
@@ -21,7 +22,7 @@ const CustomPinKeyboard: React.FC<PinInputProps> = ({ pinLength, onInputChange, 
         onInputChange(newPin);
       }
 
-      if (newPin.length === pinLength && newPin !== storedPin) {
+      if (newPin.length === pinLength) {
         setPin('');
       }
     }

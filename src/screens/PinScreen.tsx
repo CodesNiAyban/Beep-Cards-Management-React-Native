@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Image, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { MMKV } from 'react-native-mmkv';
 import CustomPinKeyboard from '../components/CustomPinKeyboard';
-import Toast from 'react-native-toast-message';
+import SimpleToast from 'react-native-simple-toast';
 
 interface Props {
   navigation: NavigationProp<any>;
@@ -22,11 +22,7 @@ const VerifyPinScreen: React.FC<Props> = ({ navigation }) => {
           setStoredPin(pin);
         }
       } catch (retrieveError) {
-        Toast.show({
-          type: 'error',
-          text1: 'Error',
-          text2: 'Error retrieving PIN.',
-        });
+        SimpleToast.show('Error retrieving PIN.', SimpleToast.SHORT, {tapToDismissEnabled: true, backgroundColor: '#172459'});
       }
     };
 
@@ -40,20 +36,13 @@ const VerifyPinScreen: React.FC<Props> = ({ navigation }) => {
         const savedPin = mmkv.getString('pin');
         if (text === savedPin) {
           console.log('PIN is correct with ');
+          setStoredPin('');
           navigation.navigate('Main');
         } else {
-          Toast.show({
-            type: 'error',
-            text1: 'Error',
-            text2: 'Incorrect PIN',
-          });
+          SimpleToast.show('Incorrect PIN', SimpleToast.SHORT, {tapToDismissEnabled: true, backgroundColor: '#172459'});
         }
       } catch (retrieveError) {
-        Toast.show({
-          type: 'error',
-          text1: 'Error',
-          text2: 'Error retrieving PIN' + retrieveError,
-        });
+        SimpleToast.show('Error retrieving PIN', SimpleToast.SHORT, {tapToDismissEnabled: true, backgroundColor: '#172459'});
       }
     }
   };
@@ -94,7 +83,7 @@ const VerifyPinScreen: React.FC<Props> = ({ navigation }) => {
       <Modal visible={showConfirmation} animationType="fade" transparent>
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-          <Text style={styles.modalTitle}>PIN Reset</Text>
+            <Text style={styles.modalTitle}>PIN Reset</Text>
             <Text style={styles.modalText}>Are you sure you want to reset your PIN?</Text>
             <View style={styles.modalButtons}>
               <TouchableOpacity style={styles.modalButtonNo} onPress={() => handleConfirmation(false)}>
@@ -107,7 +96,6 @@ const VerifyPinScreen: React.FC<Props> = ({ navigation }) => {
           </View>
         </View>
       </Modal>
-      <Toast />
     </View>
   );
 };

@@ -1,7 +1,6 @@
 import { NavigationProp, useIsFocused } from '@react-navigation/native';
 import React, { useEffect, useState } from 'react';
 import { FlatList, ImageBackground, RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
-import DeviceInfo from 'react-native-device-info';
 import LinearGradient from 'react-native-linear-gradient';
 import { Text } from 'react-native-paper';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
@@ -12,6 +11,7 @@ import { deleteUser, fetchBeepCard, getTransactions } from '../network/BeepCardM
 import { MMKV } from 'react-native-mmkv';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faTrash, faStar } from '@fortawesome/free-solid-svg-icons';
+import SimpleToast from 'react-native-simple-toast';
 
 interface BeepCardsScreenProps {
 	beepCards: BeepCardsModel[];
@@ -30,6 +30,7 @@ const BeepCardsScreen: React.FC<BeepCardsScreenProps> = ({ beepCards, setBeepCar
 	const [isInitialRender, setIsInitialRender] = useState(true); // Track initial render
 	const isFocused = useIsFocused();
 	const mmkv = new MMKV();
+	const androidID = mmkv.getString('phoneID');
 
 	const TRANSACTION_LIMIT = 5;
 
@@ -55,9 +56,8 @@ const BeepCardsScreen: React.FC<BeepCardsScreenProps> = ({ beepCards, setBeepCar
 		console.log('Refresh baby');
 		setRefreshing(true);
 		try {
-			const androidID = await DeviceInfo.getAndroidId();
-			const data = await fetchBeepCard(androidID);
-			const transactionData = await getTransactions(androidID);
+			const data = await fetchBeepCard(androidID!);
+			const transactionData = await getTransactions(androidID!);
 			setBeepCards(data);
 			if (transactionData) {
 				setTransactions(transactionData);
@@ -81,8 +81,7 @@ const BeepCardsScreen: React.FC<BeepCardsScreenProps> = ({ beepCards, setBeepCar
 		if (selectedBeepCard) {
 			try {
 				// Call the deleteUser function from the API file to delete the selected beep card
-				const androidID = await DeviceInfo.getAndroidId();
-				await deleteUser(androidID, selectedBeepCard.UUIC);
+				await deleteUser(androidID!, selectedBeepCard.UUIC);
 
 				// Update the beepCards state by filtering out the deleted card
 				const updatedBeepCards = beepCards.filter(card => card._id !== selectedBeepCard._id);
@@ -165,6 +164,7 @@ const BeepCardsScreen: React.FC<BeepCardsScreenProps> = ({ beepCards, setBeepCar
 			} else {
 				// Otherwise, select the current card
 				mmkv.set('selectedBeepCard', item.UUIC.toString());
+				SimpleToast.show('Beep card™ ' + mmkv.getString('selectedBeepCard') + ' selected', SimpleToast.SHORT, {tapToDismissEnabled: true, backgroundColor: '#172459'});
 			}
 			// Call onRefresh to update the UI
 			onRefresh();

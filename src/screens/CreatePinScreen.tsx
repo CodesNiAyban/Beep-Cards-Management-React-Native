@@ -2,7 +2,8 @@ import { MMKV } from 'react-native-mmkv';
 import { NavigationProp } from '@react-navigation/native';
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import Toast from 'react-native-toast-message';
+import SimpleToast from 'react-native-simple-toast'; // Import react-native-simple-toast
+import DeviceInfo from 'react-native-device-info';
 
 interface Props {
   navigation: NavigationProp<any>;
@@ -17,16 +18,13 @@ const CreatePinScreen: React.FC<Props> = ({ navigation }) => {
     const checkPinExists = async () => {
       try {
         const pinCheck = mmkv.getString('pin');
-        console.log(pinCheck);
-        if (pinCheck) {
+        const androidID = mmkv.getString('phoneID');
+        console.log(pinCheck && androidID);
+        if (pinCheck && androidID) {
           navigation.navigate('Pin'); // Navigate to PinScreen if PIN exists
         }
       } catch (error) {
-        Toast.show({
-            type: 'error',
-            text1: 'Error',
-            text2: 'Unknown error has occured.' || 'Failed to fetch PIN. ' + error,
-          });
+        SimpleToast.show('Unknown error has occured.' || 'Failed to fetch PIN. ' + error, SimpleToast.SHORT, {tapToDismissEnabled: true, backgroundColor: '#172459'}); // Use SimpleToast instead of Toast
       }
     };
 
@@ -48,21 +46,14 @@ const CreatePinScreen: React.FC<Props> = ({ navigation }) => {
     if (pin === verifyPin) {
       try {
         mmkv.set('pin', pin);
+        mmkv.set('phoneID', (await DeviceInfo.getAndroidId()).toString());
         console.log('pin', pin);
         navigation.navigate('Pin');
       } catch (error) {
-        Toast.show({
-            type: 'error',
-            text1: 'Error',
-            text2: 'Unknown error has occured.' || 'PIN creation failed. ' + error,
-          });
+        SimpleToast.show('Unknown error has occured.' || 'PIN creation failed. ' + error, SimpleToast.SHORT, {tapToDismissEnabled: true, backgroundColor: '#172459'}); // Use SimpleToast instead of Toast
       }
     } else {
-      Toast.show({
-        type: 'error',
-        text1: 'Error',
-        text2: 'PIN does not match',
-      });
+      SimpleToast.show('PIN does not match', SimpleToast.SHORT, {tapToDismissEnabled: true, backgroundColor: '#172459'}); // Use SimpleToast instead of Toast
     }
   };
 
@@ -97,7 +88,6 @@ const CreatePinScreen: React.FC<Props> = ({ navigation }) => {
       <TouchableOpacity style={styles.button} onPress={handlePinCreation}>
         <Text style={styles.buttonText}>Create PIN</Text>
       </TouchableOpacity>
-      <Toast />
     </View>
   );
 };

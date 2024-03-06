@@ -65,7 +65,7 @@ const OptionIcon: React.FC<OptionIconProps> = ({ name, label }) => (
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#2C3E50',
+    backgroundColor: '#EDF3FF',
     padding: 16,
     color: 'white',
   },
@@ -102,6 +102,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 8,
+    backgroundColor: '#333',
   },
   cardNumber: {
     fontSize: 14,
