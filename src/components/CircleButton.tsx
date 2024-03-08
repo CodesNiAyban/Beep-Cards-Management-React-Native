@@ -1,13 +1,15 @@
 import React from 'react';
 import { StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { useUserInactivity } from './UserActivityDetector';
 
 interface CircleButtonProps {
   onPress: () => void;
 }
 
 const CircleButton: React.FC<CircleButtonProps> = ({ onPress }) => {
+  const { resetTimer } = useUserInactivity();
   return (
-    <TouchableOpacity style={styles.circleButton} onPress={onPress}>
+    <TouchableOpacity style={styles.circleButton} onPress={() => {onPress; resetTimer();}}>
       <Image source={require('../assets/circle_button_image.png')} style={styles.circleButtonImage} />
     </TouchableOpacity>
   );

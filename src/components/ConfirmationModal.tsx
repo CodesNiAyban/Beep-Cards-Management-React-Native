@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Modal, TouchableOpacity, StyleSheet } from 'react-native';
 import { Text } from 'react-native-paper';
+import { useUserInactivity } from './UserActivityDetector';
 
 interface ConfirmationModalProps {
     isVisible: boolean;
@@ -19,6 +20,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
     message,
     beepCardDetails,
 }) => {
+    const { resetTimer } = useUserInactivity();
     return (
         <Modal
             animationType="fade"
@@ -30,20 +32,22 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
                 <TouchableOpacity
                     style={styles.modalBackground}
                     activeOpacity={1}
-                    onPress={onClose}
+                    onPress={() => {onClose; resetTimer();}}
                 >
                     <View style={styles.modalContainer}>
                         <View style={styles.modalContent}>
                             <Text style={styles.modalTitle}>{title}</Text>
                             <Text style={styles.modalMessage}>{message}</Text>
-                            <View style={styles.uuidContainer}>
-                                <Text style={styles.uuidText}>{beepCardDetails}</Text>
-                            </View>
+                            {beepCardDetails &&
+                                <View style={styles.uuidContainer}>
+                                    <Text style={styles.uuidText}>{beepCardDetails}</Text>
+                                </View>
+                            }
                             <View style={styles.buttonContainer}>
-                                <TouchableOpacity style={[styles.button, styles.cancelButton]} onPress={onClose}>
+                                <TouchableOpacity style={[styles.button, styles.cancelButton]} onPress={() => {onClose; resetTimer();}}>
                                     <Text style={styles.buttonText}>Cancel</Text>
                                 </TouchableOpacity>
-                                <TouchableOpacity style={[styles.button, styles.confirmButton]} onPress={onConfirm}>
+                                <TouchableOpacity style={[styles.button, styles.confirmButton]} onPress={() => {onConfirm();}}>
                                     <Text style={styles.buttonText}>Confirm</Text>
                                 </TouchableOpacity>
                             </View>

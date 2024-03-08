@@ -1,10 +1,12 @@
 import { NavigationProp } from '@react-navigation/native';
 import React, { useState } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Card, Divider, Title } from 'react-native-paper';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import { TransactionItem as TransactionsModel } from '../models/TransactionsModel';
 import { BeepCardItem as BeepCardsModel } from '../models/beepCardsModel';
+import { fetchBeepCard, getTransactions } from '../network/BeepCardManagerAPI';
+import { MMKV } from 'react-native-mmkv';
 
 interface TransactionScreenProps {
   beepCards: BeepCardsModel[];
@@ -18,6 +20,9 @@ interface TransactionScreenProps {
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const TransactionScreen: React.FC<TransactionScreenProps> = ({ beepCards, setBeepCards, transactions, setTransactions, navigation }) => {
   const [expandedGroups, setExpandedGroups] = useState<{ [key: string]: boolean }>({});
+  const [refreshing, setRefreshing] = useState(false);
+  const mmkv = new MMKV();
+  const androidID = mmkv.getString('phoneID');
 
   const groupedTransactions = transactions.reduce((acc, transaction) => {
     const date = new Date(transaction.createdAt).toISOString().split('T')[0]; // Extracting only the date part
@@ -35,52 +40,109 @@ const TransactionScreen: React.FC<TransactionScreenProps> = ({ beepCards, setBee
     }));
   };
 
+  const onRefresh = async () => {
+    console.log('Refresh baby');
+    setRefreshing(true);
+    try {
+      const data = await fetchBeepCard(androidID!);
+      const transactionData = await getTransactions(androidID!);
+      setBeepCards(data);
+      if (transactionData) {
+        setTransactions(transactionData);
+      } else {
+        console.log('Transactions not found');
+      }
+    } catch (error) {
+      console.error('Error fetching beep cards:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+
   const renderItem = ({ item }: { item: TransactionsModel }) => {
     return (
-      <Card style={styles.card}>
-        <Card.Content style={styles.content}>
-          <View style={styles.header}>
-            <FontAwesome5 name={item.tapIn ? 'arrow-circle-down' : 'arrow-circle-up'} size={24} color="#000" style={styles.icon} />
-            <Title style={styles.headerText}>{item.tapIn ? 'TapIn' : 'TapOut'}</Title>
-          </View>
-          <Text style={styles.headerUUIC}>{item.UUIC}</Text>
-          <Divider style={styles.divider} />
-          <View style={styles.grid}>
-            <View>
-              <Text style={styles.boldText}>Initial Balance</Text>
-              <Text style={styles.subText}>{item.initialBalance}</Text>
-              <Text style={styles.boldText}>From Station</Text>
-              <Text style={styles.subText}>{item.prevStation}</Text>
-            </View>
-            <View style={styles.textRight}>
-              <Text style={styles.boldText}>Current Balance</Text>
-              <Text style={styles.subText}>{item.currBalance}</Text>
-              <Text style={styles.boldText}>To Station</Text>
-              <Text style={styles.subText}>{item.currStation}</Text>
-            </View>
-          </View>
-          <Divider style={styles.divider} />
-          <View style={styles.grid}>
-            <View>
-              <Text style={styles.boldText}>Distance Traveled</Text>
-              <Text style={styles.subText}>{item.distance} km</Text>
-            </View>
-            <View style={styles.textRight}>
-              <Text style={styles.boldText}>Fare Charged</Text>
-              <Text style={styles.subText}>PhP -{item.fare}</Text>
-            </View>
-          </View>
-          <View style={styles.grid}>
-            <View>
-              <Text style={styles.boldText}>Time</Text>
-              <Text style={styles.subText}>{formatTime(item.createdAt.toString())}</Text>
-            </View>
-          </View>
-        </Card.Content>
-      </Card>
+      <>
+        {!item.tapIn ? (
+          <Card style={styles.card}>
+            <Card.Content>
+              <View style={styles.header}>
+                <FontAwesome5 name={item.tapIn ? 'arrow-circle-down' : 'arrow-circle-up'} size={24} color="#000" style={styles.icon} />
+                <Title style={styles.headerText}>{item.tapIn ? 'TapIn' : 'TapOut'}</Title>
+              </View>
+              <Text style={styles.headerUUIC}>{item.UUIC}</Text>
+              <Divider style={styles.divider} />
+              <View style={styles.grid}>
+                <View>
+                  <Text style={styles.title}>Initial Balance</Text>
+                  <Text style={styles.subText}>₱{item.initialBalance}</Text>
+                  <Text style={styles.title}>From Station</Text>
+                  <Text style={styles.subText}>{item.prevStation}</Text>
+                </View>
+                <View style={styles.textRight}>
+                  <Text style={styles.title}>Current Balance</Text>
+                  <Text style={styles.subText}>₱{item.currBalance}</Text>
+                  <Text style={styles.title}>To Station</Text>
+                  <Text style={styles.subText}>{item.currStation}</Text>
+                </View>
+              </View>
+              <Divider style={styles.divider} />
+              <View style={styles.grid}>
+                <View>
+                  <Text style={styles.title}>Distance Traveled</Text>
+                  <Text style={styles.subText}>{item.distance} km</Text>
+                </View>
+                <View style={styles.textRight}>
+                  <Text style={styles.title}>Fare Charged</Text>
+                  <Text style={styles.balance}>- ₱{item.fare}</Text>
+                </View>
+              </View>
+              <View style={styles.grid}>
+                <View>
+                  <Text style={styles.title}>Time</Text>
+                  <Text style={styles.date}>{formatTime(item.createdAt.toString())}</Text>
+                </View>
+              </View>
+            </Card.Content>
+          </Card>
+        ) : (
+          <Card style={styles.card}>
+            <Card.Content>
+              <View style={styles.header}>
+                <FontAwesome5 name={item.tapIn ? 'arrow-circle-down' : 'arrow-circle-up'} size={24} color="#000" style={styles.icon} />
+                <Title style={styles.headerText}>{item.tapIn ? 'TapIn' : 'TapOut'}</Title>
+              </View>
+              <Text style={styles.headerUUIC}>{item.UUIC}</Text>
+              <Divider style={styles.divider} />
+              <View style={styles.grid}>
+                <View>
+                  <Text style={styles.title}>Initial Station</Text>
+                  <Text style={styles.subText}>{toTitleCase(item.currStation)}</Text>
+                </View>
+                <View style={styles.textRight}>
+                  <Text style={styles.title}>Current Balance</Text>
+                  <Text style={styles.subText}>₱{item.initialBalance}</Text>
+                </View>
+              </View>
+              <Divider style={styles.divider} />
+              <View style={styles.grid}>
+                <View>
+                  <Text style={styles.title}>Time</Text>
+                  <Text style={styles.date}>{formatTime(item.createdAt.toString())}</Text>
+                </View>
+              </View>
+            </Card.Content>
+          </Card>
+        )}
+      </>
     );
   };
 
+  function toTitleCase(str: string) {
+    return str.replace(/\b\w/g, function (char: string) {
+      return char.toUpperCase();
+    });
+  }
 
   const formatDate = (timestamp: string): string => {
     const date = new Date(timestamp);
@@ -143,7 +205,7 @@ const TransactionScreen: React.FC<TransactionScreenProps> = ({ beepCards, setBee
   );
 
   return (
-    <ScrollView contentContainerStyle={styles.scrollContainer}>
+    <ScrollView contentContainerStyle={styles.scrollContainer} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
       {transactions.length > 0 ? (
         <View style={styles.container}>
           {Object.keys(groupedTransactions).map((date) => (
@@ -171,42 +233,38 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   card: {
-    margin: 10,
+    margin: 5,
     borderRadius: 10,
     backgroundColor: '#fff',
-  },
-  content: {
-    padding: 12,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 4,
   },
   headerText: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
+    marginLeft: 5,
   },
   grid: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    marginBottom: 4,
   },
   gridItem: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  subText: {
+  headerUUIC: {
     fontSize: 14,
     color: '#333', // Change text color to black
   },
-  headerUUIC: {
-    fontSize: 16,
-    color: '#333', // Change text color to black
-  },
-  boldText: {
-    fontWeight: 'bold',
-    color: '#333', // Change text color to black
+  title: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#333',
+    fontFamily: 'Roboto',
   },
   textRight: {
     alignItems: 'flex-end',
@@ -217,27 +275,10 @@ const styles = StyleSheet.create({
   icon: {
     marginRight: 4,
   },
-  transactionItem: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 15,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
   transactionIcon: {
     backgroundColor: '#FFA726',
     borderRadius: 25,
-    padding: 10,
-    marginRight: 15,
+    marginRight: 5,
   },
   transactionDetails: {
     flex: 1,
@@ -250,7 +291,7 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     paddingHorizontal: 20,
     borderRadius: 10,
-    marginBottom: 15,
+    marginBottom: 5,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -264,8 +305,8 @@ const styles = StyleSheet.create({
     marginLeft: 10,
   },
   dateHeaderText: {
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: 14,
+    fontWeight: '600',
     color: '#fff',
   },
   emptyContainer: {
@@ -277,13 +318,36 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 24,
     textAlign: 'center',
-    color: '#fff',
+    color: '#333',
     lineHeight: 30,
   },
   text: {
-    fontSize: 16,
+    fontSize: 12,
     color: '#333',
     marginBottom: 5,
+  },
+  subText: {
+    fontSize: 12,
+    color: '#555',
+    fontFamily: 'Roboto',
+    marginBottom: 10,
+  },
+  date: {
+    fontSize: 11,
+    color: '#898A8F',
+    fontFamily: 'Roboto',
+  },
+  transactionHeaderText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#333',
+    fontFamily: 'Roboto',
+  },
+  balance: {
+    fontSize: 12,
+    color: '#D66062',
+    marginLeft: 'auto', // Automatically adjust margin left
+    fontFamily: 'Roboto',
   },
 });
 

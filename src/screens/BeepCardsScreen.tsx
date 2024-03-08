@@ -1,3 +1,4 @@
+/* eslint-disable react-native/no-inline-styles */
 import { NavigationProp, useIsFocused } from '@react-navigation/native';
 import React, { useEffect, useState } from 'react';
 import { FlatList, ImageBackground, RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
@@ -12,6 +13,8 @@ import { MMKV } from 'react-native-mmkv';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faTrash, faStar } from '@fortawesome/free-solid-svg-icons';
 import SimpleToast from 'react-native-simple-toast';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import Swipeable from 'react-native-swipeable';
 
 interface BeepCardsScreenProps {
 	beepCards: BeepCardsModel[];
@@ -27,7 +30,6 @@ const BeepCardsScreen: React.FC<BeepCardsScreenProps> = ({ beepCards, setBeepCar
 	const [isConfirmationModalVisible, setIsConfirmationModalVisible] = useState(false);
 	const [showTransactionsMap, setShowTransactionsMap] = useState<{ [key: string]: boolean }>({});
 	const [refreshing, setRefreshing] = useState(false);
-	const [isInitialRender, setIsInitialRender] = useState(true); // Track initial render
 	const isFocused = useIsFocused();
 	const mmkv = new MMKV();
 	const androidID = mmkv.getString('phoneID');
@@ -39,15 +41,7 @@ const BeepCardsScreen: React.FC<BeepCardsScreenProps> = ({ beepCards, setBeepCar
 	};
 
 	useEffect(() => {
-		if (!isInitialRender) {
-			const unsubscribe = navigation.addListener('focus', () => {
-				onRefresh();
-			});
-
-			return unsubscribe;
-		} else {
-			setIsInitialRender(false);
-		}
+		onRefresh();
 
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [isFocused]);
@@ -147,7 +141,11 @@ const BeepCardsScreen: React.FC<BeepCardsScreenProps> = ({ beepCards, setBeepCar
 			return formattedDate;
 		};
 
-		const matchingTransactions = transactions.filter(transaction => transaction.UUIC === item.UUIC).slice(0, TRANSACTION_LIMIT);
+		const matchingTransactions = transactions.filter(transaction =>
+			transaction.UUIC === item.UUIC &&
+			!item.isActive &&
+			!transaction.tapIn
+		).slice(0, TRANSACTION_LIMIT);
 
 		const toggleDetails = () => {
 			setShowTransactionsMap(prevState => ({
@@ -164,12 +162,11 @@ const BeepCardsScreen: React.FC<BeepCardsScreenProps> = ({ beepCards, setBeepCar
 			} else {
 				// Otherwise, select the current card
 				mmkv.set('selectedBeepCard', item.UUIC.toString());
-				SimpleToast.show('Beep card™ ' + mmkv.getString('selectedBeepCard') + ' selected', SimpleToast.SHORT, {tapToDismissEnabled: true, backgroundColor: '#172459'});
+				SimpleToast.show('Beep card™ ' + mmkv.getString('selectedBeepCard') + ' selected', SimpleToast.SHORT, { tapToDismissEnabled: true, backgroundColor: '#172459' });
 			}
 			// Call onRefresh to update the UI
 			onRefresh();
 		};
-
 
 		const renderNoTransactions = () => {
 			return (
@@ -194,7 +191,6 @@ const BeepCardsScreen: React.FC<BeepCardsScreenProps> = ({ beepCards, setBeepCar
 						<ImageBackground
 							source={require('../assets/beepCardImage.png')} // Replace '../assets/card_background.jpg' with your image source
 							style={styles.cardContainer}
-							// eslint-disable-next-line react-native/no-inline-styles
 							imageStyle={{ borderRadius: 10 }} // Apply borderRadius to the image background
 						>
 							<View style={styles.cardHeader}>
@@ -271,9 +267,7 @@ const BeepCardsScreen: React.FC<BeepCardsScreenProps> = ({ beepCards, setBeepCar
 		);
 	};
 
-
 	return (
-
 		<View style={styles.container}>
 			{beepCards.length > 0 ? (
 				<FlatList

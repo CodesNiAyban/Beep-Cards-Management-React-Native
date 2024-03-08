@@ -18,16 +18,18 @@ interface Message {
 }
 
 interface TapScreenProps {
-	navigation: NavigationProp<any>;
-  }
+    navigation: NavigationProp<any>;
+}
 
-const WebSocketTester: React.FC<TapScreenProps> = ({ navigation }) => {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const TapScreen: React.FC<TapScreenProps> = ({ navigation }) => {
     const [socket, setSocket] = useState<Socket | null>(null);
     const [isConnected, setIsConnected] = useState<boolean>(false);
     const [room, setRoom] = useState<string>('');
     const [message, setMessage] = useState<string>('');
     const [showFrontCamera, setShowFrontCamera] = useState<boolean>(false);
     const [cameraOn, setCameraOn] = useState<boolean>(false);
+    const [receivedMessage, setReceivedMessage] = useState<string | null>(null);
     const { hasPermission, requestPermission } = useCameraPermission();
     const device = useCameraDevice(showFrontCamera ? 'front' : 'back');
     const isFocused = useIsFocused();
@@ -61,11 +63,11 @@ const WebSocketTester: React.FC<TapScreenProps> = ({ navigation }) => {
             if (allCornersWithinRegion) {
                 if (isValidUUID(scannedValue!)) {
                     console.log(scannedValue);
-                    setRoom(value || '');
+                    setRoom(value!);
+                    console.log(room)
                     joinRoom();
                     sendMessage();
                     setCameraOn(false);
-					SimpleToast.show('Tap Success!', SimpleToast.LONG, { tapToDismissEnabled: true, backgroundColor: '#172459' });
                 } else {
                     SimpleToast.show('Invalid QR Code', SimpleToast.LONG, { tapToDismissEnabled: true, backgroundColor: '#172459' });
                     setCameraOn(false);
@@ -75,6 +77,12 @@ const WebSocketTester: React.FC<TapScreenProps> = ({ navigation }) => {
             }
         },
     });
+
+    useEffect(() => {
+        if (!isValidUUID(receivedMessage!)) {
+            SimpleToast.show(receivedMessage!, SimpleToast.LONG, { tapToDismissEnabled: true, backgroundColor: '#172459' });
+        }
+    }, [receivedMessage]);
 
     const isValidUUID = (value: string) => {
         const uuidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/;
@@ -88,15 +96,16 @@ const WebSocketTester: React.FC<TapScreenProps> = ({ navigation }) => {
     };
 
     useEffect(() => {
-        handleRefresh();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // handleRefresh();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isFocused]);
 
     const initializeSocket = async () => {
         const newSocket = await connectWebsocket();
         setSocket(newSocket);
 
-        newSocket!.on('message', () => {
+        newSocket!.on('message', (msg: string) => {
+            setReceivedMessage(msg);
             setCameraOn(false);
         });
 
@@ -124,15 +133,13 @@ const WebSocketTester: React.FC<TapScreenProps> = ({ navigation }) => {
         };
     };
 
-    useEffect(() => {
-        setRefreshing(true);
-    }, []);
-
     const sendMessage = () => {
         if (socket && room && message) {
             const data: Message = { room, message };
             socket.emit('messageToRoom', data);
-			navigation.goBack();
+            // setTimeout(() => {
+            //     navigation.navigate('Main', { screen: 'MyCard' });
+            // }, 3000); // Delay in milliseconds (3 seconds)
         }
     };
 
@@ -148,7 +155,7 @@ const WebSocketTester: React.FC<TapScreenProps> = ({ navigation }) => {
 
     const handleReconnect = async () => {
         setReconnectLoading(true); // Start loading
-        await handleRefresh(); // Refresh the connection
+        handleRefresh(); // Refresh the connection
         setReconnectLoading(false); // Stop loading
     };
 
@@ -159,57 +166,59 @@ const WebSocketTester: React.FC<TapScreenProps> = ({ navigation }) => {
     };
 
     return (
-        <ScrollView
-            contentContainerStyle={styles.scrollView}
-            refreshControl={
-                <RefreshControl
-                    refreshing={refreshing}
-                    onRefresh={handleRefresh}
-                />
-            }
-        >
-            <View style={styles.container}>
-                {isConnected && cameraOn ? (
-                    <>
-                        <Camera
-                            style={styles.camera}
-                            device={device!}
-                            isActive={true}
-                            codeScanner={codeScanner}
-                        />
-                        <RNHoleView style={styles.maskView} holes={[{ x: 70, y: 190, width: 250, height: 250, borderRadius: 60 }]} />
-                        <View style={styles.qrLabel}>
-                            <Text style={styles.qrLabelText}>beep™ Tap</Text>
+        <>
+            <ScrollView
+                contentContainerStyle={styles.scrollView}
+                // refreshControl={
+                //     <RefreshControl
+                //         refreshing={refreshing}
+                //         onRefresh={handleRefresh}
+                //     />
+                // }
+            >
+                <View style={styles.container}>
+                    {isConnected && cameraOn ? (
+                        <>
+                            <Camera
+                                style={styles.camera}
+                                device={device!}
+                                isActive={true}
+                                codeScanner={codeScanner}
+                            />
+                            <RNHoleView style={styles.maskView} holes={[{ x: 70, y: 190, width: 250, height: 250, borderRadius: 60 }]} />
+                            <View style={styles.qrLabel}>
+                                <Text style={styles.qrLabelText}>beep™ Tap</Text>
+                            </View>
+                            <View style={styles.scanRegion} />
+                            <TouchableOpacity style={styles.toggleCameraContainer} onPress={switchCamera}>
+                                <Icon name="exchange-alt" size={23} color="#172459" />
+                            </TouchableOpacity>
+                        </>
+                    ) : (
+                        <View style={styles.statusContainer}>
+                            <Text style={styles.status}>
+                                Not Connected to MRT Tap
+                            </Text>
+                            <Text style={styles.status}>
+                                Drag Down to Refresh
+                            </Text>
+                            <Button
+                                mode="contained"
+                                onPress={handleReconnect}
+                                loading={reconnectLoading}
+                                disabled={reconnectLoading} // Disable the button when loading
+                            >
+                                {reconnectLoading ? 'Connecting...' : 'Reconnect'}
+                            </Button>
                         </View>
-                        <View style={styles.scanRegion} />
-                        <TouchableOpacity style={styles.toggleCameraContainer} onPress={switchCamera}>
-                            <Icon name="exchange-alt" size={23} color="#172459" />
-                        </TouchableOpacity>
-                    </>
-                ) : (
-                    <View style={styles.statusContainer}>
-                        <Text style={styles.status}>
-                            Not Connected to MRT Tap
-                        </Text>
-                        <Text style={styles.status}>
-                            Drag Down to Refresh
-                        </Text>
-                        <Button
-                            mode="contained"
-                            onPress={handleReconnect}
-                            loading={reconnectLoading}
-                            disabled={reconnectLoading} // Disable the button when loading
-                        >
-                            {reconnectLoading ? 'Connecting...' : 'Reconnect'}
-                        </Button>
-                    </View>
-                )}
-            </View>
-        </ScrollView>
+                    )}
+                </View>
+            </ScrollView>
+        </>
     );
 };
 
-export default WebSocketTester;
+export default TapScreen;
 
 const styles = StyleSheet.create({
     container: {

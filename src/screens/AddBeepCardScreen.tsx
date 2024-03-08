@@ -7,6 +7,7 @@ import Icon from 'react-native-vector-icons/FontAwesome5';
 import { Camera, useCameraDevice, useCameraPermission, useCodeScanner } from 'react-native-vision-camera';
 import { linkBeepCard } from '../network/BeepCardManagerAPI';
 import SimpleToast from 'react-native-simple-toast'; // Import SimpleToast
+import { useUserInactivity } from '../components/UserActivityDetector';
 
 interface BeepCardsScreenProps {
   navigation: NavigationProp<any>;
@@ -24,6 +25,7 @@ const AddBeepCardScreen: React.FC<BeepCardsScreenProps> = ({ navigation }) => {
   const androidID = mmkv.getString('phoneID');
   const theme = useTheme();
   const [cameraVisible, setCameraVisible] = useState(false); // State for toggling camera visibility
+  const { resetTimer } = useUserInactivity();
 
   const device = useCameraDevice(showFrontCamera ? 'front' : 'back');
 
@@ -142,7 +144,7 @@ const AddBeepCardScreen: React.FC<BeepCardsScreenProps> = ({ navigation }) => {
                 theme={{ ...theme, colors: { secondary: '#EAEAEA', outline: '#EAEAEA' } }}
                 keyboardType="numeric"
               />
-              <TouchableOpacity style={styles.qrButton} onPress={toggleCamera}>
+              <TouchableOpacity style={styles.qrButton} onPress={() => {toggleCamera(); resetTimer();}}>
                 <Icon name="qrcode" size={24} color="#172459" />
               </TouchableOpacity>
             </View>
@@ -157,9 +159,10 @@ const AddBeepCardScreen: React.FC<BeepCardsScreenProps> = ({ navigation }) => {
               <TextInput
                 value={cardLabel}
                 onChangeText={handleCardLabelChange}
-                style={[styles.textInput, { borderColor: 'transparent' }]}
+                style={styles.textInput}
                 mode="outlined"
                 maxLength={10}
+                // eslint-disable-next-line react-native/no-inline-styles
                 outlineStyle={{ borderRadius: 10, borderColor: '#EAEAEA' }}
                 theme={{ ...theme, colors: { secondary: '#EAEAEA', outline: '#EAEAEA' } }}
                 placeholder="e.g. Beep"
@@ -186,7 +189,7 @@ const AddBeepCardScreen: React.FC<BeepCardsScreenProps> = ({ navigation }) => {
                 <Text style={styles.qrLabelText}>beep™ QR</Text>
               </View>
               <View style={styles.scanRegion} />
-              <TouchableOpacity style={styles.toggleCameraContainer} onPress={switchCamera}>
+              <TouchableOpacity style={styles.toggleCameraContainer} onPress={() => {switchCamera(); resetTimer();}}>
                 <Icon name="exchange-alt" size={23} color="#172459" />
               </TouchableOpacity>
             </>
@@ -196,7 +199,7 @@ const AddBeepCardScreen: React.FC<BeepCardsScreenProps> = ({ navigation }) => {
       <View style={styles.bottomContainer}>
         <Button
           mode="contained"
-          onPress={handleSave}
+          onPress={() => {handleSave(); resetTimer();}}
           style={[styles.button, isButtonDisabled ? styles.disabledButton : null]}
           disabled={isButtonDisabled}
         >
@@ -250,6 +253,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     height: 45,
     justifyContent: 'center',
+    borderColor: 'transparent',
   },
   button: {
     backgroundColor: '#172459',

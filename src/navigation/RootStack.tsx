@@ -9,7 +9,6 @@ const Stack = createStackNavigator();
 
 const RootStackNavigator = () => {
 
-
   return (
     <Stack.Navigator initialRouteName={'CreatePin'}>
       <Stack.Screen name="CreatePin" component={CreatePinScreen} options={{ headerShown: false }} />
