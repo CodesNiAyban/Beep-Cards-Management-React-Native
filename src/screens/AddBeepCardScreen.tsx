@@ -8,6 +8,7 @@ import { Camera, useCameraDevice, useCameraPermission, useCodeScanner } from 're
 import { linkBeepCard } from '../network/BeepCardManagerAPI';
 import SimpleToast from 'react-native-simple-toast'; // Import SimpleToast
 import { useUserInactivity } from '../components/UserActivityDetector';
+import { RNHoleView } from 'react-native-hole-view';
 
 interface BeepCardsScreenProps {
   navigation: NavigationProp<any>;
@@ -92,7 +93,7 @@ const AddBeepCardScreen: React.FC<BeepCardsScreenProps> = ({ navigation }) => {
 
       if (linkedBeepCard) {
         console.log('Beep card linked:', linkedBeepCard);
-        SimpleToast.show('beep™ card ' + linkedBeepCard.UUIC + ' added', SimpleToast.SHORT, {tapToDismissEnabled: true, backgroundColor: '#172459'}); // Show error toast
+        SimpleToast.show('beep™ card ' + linkedBeepCard.UUIC + ' added', SimpleToast.SHORT, { tapToDismissEnabled: true, backgroundColor: '#172459' }); // Show error toast
         navigation.goBack();
       } else {
         console.log('Beep card not found.');
@@ -100,7 +101,7 @@ const AddBeepCardScreen: React.FC<BeepCardsScreenProps> = ({ navigation }) => {
         setIsButtonDisabled(true);
       }
     } catch (error) {
-      SimpleToast.show('Failed to link beep™ card', SimpleToast.SHORT, {tapToDismissEnabled: true, backgroundColor: '#172459'}); // Show error toast
+      SimpleToast.show('Failed to link beep™ card', SimpleToast.SHORT, { tapToDismissEnabled: true, backgroundColor: '#172459' }); // Show error toast
     }
   };
 
@@ -144,7 +145,7 @@ const AddBeepCardScreen: React.FC<BeepCardsScreenProps> = ({ navigation }) => {
                 theme={{ ...theme, colors: { secondary: '#EAEAEA', outline: '#EAEAEA' } }}
                 keyboardType="numeric"
               />
-              <TouchableOpacity style={styles.qrButton} onPress={() => {toggleCamera(); resetTimer();}}>
+              <TouchableOpacity style={styles.qrButton} onPress={() => { toggleCamera(); resetTimer(); }}>
                 <Icon name="qrcode" size={24} color="#172459" />
               </TouchableOpacity>
             </View>
@@ -185,11 +186,12 @@ const AddBeepCardScreen: React.FC<BeepCardsScreenProps> = ({ navigation }) => {
                 isActive={true}
                 codeScanner={codeScanner}
               />
+              <RNHoleView style={styles.maskView} holes={[{ x: 70, y: 100, width: 250, height: 250, borderRadius: 60 }]} />
               <View style={styles.qrLabel}>
                 <Text style={styles.qrLabelText}>beep™ QR</Text>
               </View>
               <View style={styles.scanRegion} />
-              <TouchableOpacity style={styles.toggleCameraContainer} onPress={() => {switchCamera(); resetTimer();}}>
+              <TouchableOpacity style={styles.toggleCameraContainer} onPress={() => { switchCamera(); resetTimer(); }}>
                 <Icon name="exchange-alt" size={23} color="#172459" />
               </TouchableOpacity>
             </>
@@ -199,7 +201,7 @@ const AddBeepCardScreen: React.FC<BeepCardsScreenProps> = ({ navigation }) => {
       <View style={styles.bottomContainer}>
         <Button
           mode="contained"
-          onPress={() => {handleSave(); resetTimer();}}
+          onPress={() => { handleSave(); resetTimer(); }}
           style={[styles.button, isButtonDisabled ? styles.disabledButton : null]}
           disabled={isButtonDisabled}
         >
@@ -305,18 +307,19 @@ const styles = StyleSheet.create({
   },
   scanRegion: {
     position: 'absolute',
-    left: 69.5, // Adjust to position the scan region box at the center horizontally
-    top: 90, // Adjust to position the scan region box at the center vertically
+    left: 70,
+    top: 100,
     width: 250,
     height: 250,
-    borderWidth: 3.5, // Adjust the border width as desired
+    borderWidth: 3.5,
     borderColor: '#FFFFFF',
-    borderRadius: 60, // Set to 0 to remove border radius
-    borderStyle: 'dashed', // Use solid border style for a clear rectangle
-    opacity: 0.5, // Adjust the opacity as desired
+    borderRadius: 60,
+    borderStyle: 'dashed',
+    opacity: 0.5,
   },
   toggleCameraContainer: {
-    position: 'absolute',
+    flex: 1,
+    overflow: 'hidden',
     top: 20, // Align to the top
     right: 20, // Align to the right
     borderWidth: 1,
@@ -324,6 +327,7 @@ const styles = StyleSheet.create({
     padding: 5,
     backgroundColor: '#EDF3FF',
     borderColor: '#172459',
+    position: 'absolute',
   },
   qrButton: {
     position: 'absolute',
@@ -331,17 +335,14 @@ const styles = StyleSheet.create({
     top: '50%',
     transform: [{ translateY: -12 }], // Center the button vertically
   },
-  inverseContainer: {
+  maskView: {
     position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Adjust the opacity as desired
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 1, // Ensure the container is above the camera view
-  },
+    width: '100%',
+    height: '100%',
+    backgroundColor: 'black',
+    opacity: 0.55,
+    zIndex: 0,
+},
 });
 
 export default AddBeepCardScreen;

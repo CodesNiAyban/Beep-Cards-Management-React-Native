@@ -1,4 +1,5 @@
-import { useIsFocused } from '@react-navigation/native';
+/* eslint-disable react-native/no-inline-styles */
+import { NavigationProp } from '@react-navigation/native';
 import React, { useEffect, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { RNHoleView } from 'react-native-hole-view';
@@ -9,7 +10,6 @@ import Icon from 'react-native-vector-icons/FontAwesome5';
 import { Camera, useCameraDevice, useCameraPermission, useCodeScanner } from 'react-native-vision-camera';
 import { Socket } from 'socket.io-client';
 import { connectWebsocket } from '../network/BeepCardManagerAPI';
-import { NavigationProp } from '@react-navigation/native';
 
 // Define Message interface
 interface Message {
@@ -22,17 +22,16 @@ interface TapScreenProps {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const TapScreen: React.FC<TapScreenProps> = ({ navigation }) => {
+const WebSocketTester: React.FC<TapScreenProps> = ({ navigation }) => {
     const [socket, setSocket] = useState<Socket | null>(null);
     const [isConnected, setIsConnected] = useState<boolean>(false);
     const [room, setRoom] = useState<string>('');
-    const [message, setMessage] = useState<string>('');
+    // const [message, setMessage] = useState<string>('');
     const [showFrontCamera, setShowFrontCamera] = useState<boolean>(false);
-    const [cameraOn, setCameraOn] = useState<boolean>(false);
     const [receivedMessage, setReceivedMessage] = useState<string | null>(null);
+    const [cameraOn, setCameraOn] = useState<boolean>(false);
     const { hasPermission, requestPermission } = useCameraPermission();
     const device = useCameraDevice(showFrontCamera ? 'front' : 'back');
-    const isFocused = useIsFocused();
     const mmkv = new MMKV();
     const [refreshing, setRefreshing] = useState(false);
     const [reconnectLoading, setReconnectLoading] = useState(false); // Add state for reconnect button loading
@@ -62,12 +61,15 @@ const TapScreen: React.FC<TapScreenProps> = ({ navigation }) => {
             });
             if (allCornersWithinRegion) {
                 if (isValidUUID(scannedValue!)) {
-                    console.log(scannedValue);
+                    console.log(scannedValue + ' ' + isValidUUID(scannedValue!));
                     setRoom(value!);
-                    console.log(room)
                     joinRoom();
-                    sendMessage();
-                    setCameraOn(false);
+                    sendMessage(mmkv.getString('selectedBeepCard')?.toString()!);
+                    if (receivedMessage && !isValidBeepCard(receivedMessage)) {
+                        SimpleToast.show(receivedMessage, SimpleToast.LONG, { tapToDismissEnabled: true, backgroundColor: '#172459' });
+                        setCameraOn(false);
+                        setReceivedMessage('');
+                    }
                 } else {
                     SimpleToast.show('Invalid QR Code', SimpleToast.LONG, { tapToDismissEnabled: true, backgroundColor: '#172459' });
                     setCameraOn(false);
@@ -78,27 +80,24 @@ const TapScreen: React.FC<TapScreenProps> = ({ navigation }) => {
         },
     });
 
-    useEffect(() => {
-        if (!isValidUUID(receivedMessage!)) {
-            SimpleToast.show(receivedMessage!, SimpleToast.LONG, { tapToDismissEnabled: true, backgroundColor: '#172459' });
-        }
-    }, [receivedMessage]);
-
     const isValidUUID = (value: string) => {
         const uuidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/;
         return uuidRegex.test(value);
     };
 
-    const fetchSelectecBeepCard = async () => {
-        if (isFocused) {
-            setMessage(mmkv.getString('selectedBeepCard')?.toString() || '');
-        }
+    const isValidBeepCard = (value: string) => {
+        const regex = /^637805\d{9}$/;
+        return regex.test(value);
     };
 
     useEffect(() => {
-        // handleRefresh();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isFocused]);
+        if (receivedMessage && !isValidBeepCard(receivedMessage)) {
+            console.log(receivedMessage);
+            SimpleToast.show(receivedMessage, SimpleToast.LONG, { tapToDismissEnabled: true, backgroundColor: '#172459' });
+            setCameraOn(false);
+            setReceivedMessage('');
+        }
+    }, [receivedMessage]);
 
     const initializeSocket = async () => {
         const newSocket = await connectWebsocket();
@@ -106,7 +105,6 @@ const TapScreen: React.FC<TapScreenProps> = ({ navigation }) => {
 
         newSocket!.on('message', (msg: string) => {
             setReceivedMessage(msg);
-            setCameraOn(false);
         });
 
         newSocket!.on('connect', async () => {
@@ -133,13 +131,15 @@ const TapScreen: React.FC<TapScreenProps> = ({ navigation }) => {
         };
     };
 
-    const sendMessage = () => {
+    useEffect(() => {
+        setRefreshing(true);
+    }, []);
+
+    const sendMessage = (message: string) => {
         if (socket && room && message) {
             const data: Message = { room, message };
             socket.emit('messageToRoom', data);
-            // setTimeout(() => {
-            //     navigation.navigate('Main', { screen: 'MyCard' });
-            // }, 3000); // Delay in milliseconds (3 seconds)
+            // navigation.goBack();
         }
     };
 
@@ -160,71 +160,70 @@ const TapScreen: React.FC<TapScreenProps> = ({ navigation }) => {
     };
 
     const handleRefresh = () => {
-        fetchSelectecBeepCard();
         setRefreshing(true);
         initializeSocket();
     };
 
     return (
-        <>
-            <ScrollView
-                contentContainerStyle={styles.scrollView}
-                // refreshControl={
-                //     <RefreshControl
-                //         refreshing={refreshing}
-                //         onRefresh={handleRefresh}
-                //     />
-                // }
-            >
-                <View style={styles.container}>
-                    {isConnected && cameraOn ? (
-                        <>
-                            <Camera
-                                style={styles.camera}
-                                device={device!}
-                                isActive={true}
-                                codeScanner={codeScanner}
-                            />
-                            <RNHoleView style={styles.maskView} holes={[{ x: 70, y: 190, width: 250, height: 250, borderRadius: 60 }]} />
-                            <View style={styles.qrLabel}>
-                                <Text style={styles.qrLabelText}>beep™ Tap</Text>
-                            </View>
-                            <View style={styles.scanRegion} />
-                            <TouchableOpacity style={styles.toggleCameraContainer} onPress={switchCamera}>
-                                <Icon name="exchange-alt" size={23} color="#172459" />
-                            </TouchableOpacity>
-                        </>
-                    ) : (
-                        <View style={styles.statusContainer}>
-                            <Text style={styles.status}>
-                                Not Connected to MRT Tap
-                            </Text>
-                            <Text style={styles.status}>
-                                Drag Down to Refresh
-                            </Text>
-                            <Button
-                                mode="contained"
-                                onPress={handleReconnect}
-                                loading={reconnectLoading}
-                                disabled={reconnectLoading} // Disable the button when loading
-                            >
-                                {reconnectLoading ? 'Connecting...' : 'Reconnect'}
-                            </Button>
+        <ScrollView
+            contentContainerStyle={styles.scrollView}
+            refreshControl={
+                <RefreshControl
+                    refreshing={refreshing}
+                    onRefresh={handleRefresh}
+                />
+            }
+        >
+            <View style={styles.container}>
+                {isConnected && cameraOn ? (
+                    <>
+                        <Camera
+                            style={styles.camera}
+                            device={device!}
+                            isActive={true}
+                            codeScanner={codeScanner}
+                        />
+                        <RNHoleView style={styles.maskView} holes={[{ x: 70, y: 190, width: 250, height: 250, borderRadius: 60 }]} />
+                        <View style={styles.qrLabel}>
+                            <Text style={styles.qrLabelText}>beep™ Tap</Text>
                         </View>
-                    )}
-                </View>
-            </ScrollView>
-        </>
+                        <View style={styles.scanRegion} />
+                        <TouchableOpacity style={styles.toggleCameraContainer} onPress={switchCamera}>
+                            <Icon name="exchange-alt" size={23} color="#172459" />
+                        </TouchableOpacity>
+                    </>
+                ) : (
+                    <View style={styles.statusContainer}>
+                        <Text style={styles.status}>
+                            Not Connected to MRT Tap
+                        </Text>
+                        <Text style={styles.status}>
+                            Drag Down to Refresh or
+                        </Text>
+                        <Button
+                            mode="contained"
+                            onPress={handleReconnect}
+                            loading={reconnectLoading}
+                            disabled={reconnectLoading} // Disable the button when loading
+                            style={{backgroundColor: '#333', marginTop: 10}}
+                        >
+                            {reconnectLoading ? 'Connecting...' : 'Reconnect'}
+                        </Button>
+                    </View>
+                )}
+            </View>
+        </ScrollView>
     );
 };
 
-export default TapScreen;
+export default WebSocketTester;
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
+        backgroundColor: '#EDF3FF',
     },
     scrollView: {
         flexGrow: 1,
@@ -250,7 +249,7 @@ const styles = StyleSheet.create({
     },
     scanRegion: {
         position: 'absolute',
-        left: 69.5,
+        left: 70,
         top: 190,
         width: 250,
         height: 250,

@@ -11,10 +11,9 @@ import { TransactionItem as TransactionsModel } from '../models/TransactionsMode
 import { deleteUser, fetchBeepCard, getTransactions } from '../network/BeepCardManagerAPI';
 import { MMKV } from 'react-native-mmkv';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faTrash, faStar } from '@fortawesome/free-solid-svg-icons';
+import { faTrash, faStar, faListAlt, faEdit } from '@fortawesome/free-solid-svg-icons';
 import SimpleToast from 'react-native-simple-toast';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import Swipeable from 'react-native-swipeable';
+import Swipeable from 'react-native-gesture-handler/Swipeable';
 
 interface BeepCardsScreenProps {
 	beepCards: BeepCardsModel[];
@@ -121,6 +120,36 @@ const BeepCardsScreen: React.FC<BeepCardsScreenProps> = ({ beepCards, setBeepCar
 		const latestTimestamp = item.updatedAt > item.createdAt ? item.updatedAt : item.createdAt;
 		const timestampText = latestTimestamp === item.createdAt ? 'Created On' : 'Available Balance as of';
 
+		const swipeButtons = [
+			{
+				text: 'Edit',
+				backgroundColor: '#4CAF50', // Green color
+				onPress: () => {
+					// Implement edit functionality here
+					console.log('Edit beep card:', item.UUIC);
+				},
+				icon: <FontAwesomeIcon icon={faEdit} size={18} color="#FFFFFF" />,
+			},
+			{
+				text: 'Delete',
+				backgroundColor: '#F44336', // Red color
+				onPress: () => {
+					// Implement delete functionality here
+					handleTrashPress(item);
+				},
+				icon: <FontAwesomeIcon icon={faTrash} size={18} color="#FFFFFF" />,
+			},
+			{
+				text: 'Transactions',
+				backgroundColor: '#2196F3', // Blue color
+				onPress: () => {
+					// Implement transactions functionality here
+					console.log('View transactions for beep card:', item.UUIC);
+				},
+				icon: <FontAwesomeIcon icon={faListAlt} size={18} color="#FFFFFF" />,
+			},
+		];
+
 		// Calculate valid until date (5 years from creation date)
 		const validUntilDate = new Date(item.createdAt);
 		validUntilDate.setFullYear(validUntilDate.getFullYear() + 5);
@@ -186,83 +215,110 @@ const BeepCardsScreen: React.FC<BeepCardsScreenProps> = ({ beepCards, setBeepCar
 
 		return (
 			<>
-				<TouchableOpacity onPress={toggleDetails}>
-					<View>
-						<ImageBackground
-							source={require('../assets/beepCardImage.png')} // Replace '../assets/card_background.jpg' with your image source
-							style={styles.cardContainer}
-							imageStyle={{ borderRadius: 10 }} // Apply borderRadius to the image background
-						>
-							<View style={styles.cardHeader}>
-								<Text style={styles.cardHeaderText}>{item.UUIC}</Text>
-								<TouchableOpacity onPress={() => handleTrashPress(item)}>
-									<FontAwesomeIcon icon={faTrash} size={18} color="#FD9A00" style={styles.trashIcon} />
+				<View style={{ position: 'relative', overflow: 'hidden' }}>
+					<Swipeable renderRightActions={() => (
+						<View style={{ flexDirection: 'column' }}>
+							{swipeButtons.map((button, idx) => (
+								<TouchableOpacity
+									key={idx}
+									style={{
+										backgroundColor: button.backgroundColor,
+										justifyContent: 'center',
+										alignItems: 'center',
+										width: 75,
+										height: '97.2%',
+										padding: 10,
+										borderTopLeftRadius: button.text === 'Edit' ? 5 : 0, // Apply border radius only to the top of Edit button
+										borderTopEndRadius:  button.text === 'Edit' ? 5 : 0,
+										borderBottomRightRadius: button.text === 'Transactions' ? 5 : 0, // Apply border radius only to the bottom of Transactions button
+										borderBottomLeftRadius: button.text === 'Transactions' ? 5 : 0,
+										flex: 1,
+										marginTop: button.text === 'Edit' ? 5 : 0, // Conditionally apply marginTop only to the Edit button
+									}}
+									onPress={button.onPress}
+								>
+									{button.icon}
 								</TouchableOpacity>
-								<TouchableOpacity onPress={() => handleStarPress()}>
-									{item.UUIC.toString() === mmkv.getString('selectedBeepCard') ? (
-										<FontAwesomeIcon icon={faStar} size={18} color="#FFD700" style={styles.starIcon} />
-									) : (
-										<FontAwesome5 name={'star'} size={18} color="#FFD700" style={styles.starIcon} />
-									)}
-								</TouchableOpacity>
-							</View>
-							<View style={styles.cardDetails}>
-								<View style={styles.row}>
-									<Text style={styles.validUntilText}>Valid Until {validUntilDateString}</Text>
-								</View>
-								<View style={styles.row}>
-									<Text style={styles.label}>{mmkv.getString(item.UUIC.toString())}</Text>
-								</View>
-								<View style={styles.row}>
-									<Text style={styles.timestamp}>
-										{timestampText} {formatDate(latestTimestamp)}
-									</Text>
-								</View>
-								<View style={styles.row}>
-									<Text style={styles.cardBalance}>₱{item.balance.toFixed(2)}</Text>
-								</View>
-								<View style={styles.nestedBadge}>
-									<View style={[styles.badge, { backgroundColor: item.isActive ? '#00E676' : '#FF1744' }]} />
-									<Text style={styles.badgeText}>{getOnboardStatus(item.isActive)}</Text>
-								</View>
+							))}
+						</View>
+					)}>
+						<TouchableOpacity onPress={toggleDetails}>
+							<View>
+								<ImageBackground
+									source={require('../assets/beepCardImage.png')} // Replace '../assets/card_background.jpg' with your image source
+									style={styles.cardContainer}
+									imageStyle={{ borderRadius: 10 }} // Apply borderRadius to the image background
+								>
+									<View style={styles.cardHeader}>
+										<Text style={styles.cardHeaderText}>{item.UUIC}</Text>
+										<TouchableOpacity onPress={() => handleStarPress()}>
+											{item.UUIC.toString() === mmkv.getString('selectedBeepCard') ? (
+												<FontAwesomeIcon icon={faStar} size={18} color="#FFD700" style={styles.starIcon} />
+											) : (
+												<FontAwesome5 name={'star'} size={18} color="#FFD700" style={styles.starIcon} />
+											)}
+										</TouchableOpacity>
+									</View>
+									<View style={styles.cardDetails}>
+										<View style={styles.row}>
+											<Text style={styles.validUntilText}>Valid Until {validUntilDateString}</Text>
+										</View>
+										<View style={styles.row}>
+											<Text style={styles.label}>{mmkv.getString(item.UUIC.toString())}</Text>
+										</View>
+										<View style={styles.row}>
+											<Text style={styles.timestamp}>
+												{timestampText} {formatDate(latestTimestamp)}
+											</Text>
+										</View>
+										<View style={styles.row}>
+											<Text style={styles.cardBalance}>₱{item.balance.toFixed(2)}</Text>
+										</View>
+										<View style={styles.nestedBadge}>
+											<View style={[styles.badge, { backgroundColor: item.isActive ? '#00E676' : '#FF1744' }]} />
+											<Text style={styles.badgeText}>{getOnboardStatus(item.isActive)}</Text>
+										</View>
 
+									</View>
+								</ImageBackground>
 							</View>
-						</ImageBackground>
-					</View>
-					{showTransactionsMap[item._id] && (
-						<View>
-							{matchingTransactions.length > 0 ? (
-								<View style={styles.transactionDatesAndContainer}>
-									<Text style={styles.transactionHeaderText}>Latest Transactions ({matchingTransactions.length})</Text>
-									<Text style={styles.transactionTimestamp}>as of {formatTransactionTimestamp(latestTimestamp)}</Text>
-									{matchingTransactions.map((transaction, num) => (
-										<View key={num} style={styles.transactionContainer}>
-											<View style={styles.transactionContainer}>
-												<View style={styles.transactionDetails}>
-													<View style={styles.circle}>
-														<FontAwesome5 name="credit-card" size={20} color="#1B2646" />
-													</View>
-													<View style={styles.transactionContainer}>
-														<Text style={styles.title}>MRT Online Service Provider</Text>
-														<View style={styles.transactionDetails}>
-															<Text style={styles.date}>{formatTransactionTimestamp(transaction.updatedAt.toString())}</Text>
-															<Text style={styles.balance}>- ₱{transaction.fare.toFixed(2)}</Text>
-														</View>
+						</TouchableOpacity>
+					</Swipeable >
+				</View>
+				{showTransactionsMap[item._id] && (
+					<View>
+						{matchingTransactions.length > 0 ? (
+							<View style={styles.transactionDatesAndContainer}>
+								<Text style={styles.transactionHeaderText}>Latest Transactions ({matchingTransactions.length})</Text>
+								<Text style={styles.transactionTimestamp}>as of {formatTransactionTimestamp(latestTimestamp)}</Text>
+								{matchingTransactions.map((transaction, num) => (
+									<View key={num} style={styles.transactionContainer}>
+										<View style={styles.transactionContainer}>
+											<View style={styles.transactionDetails}>
+												<View style={styles.circle}>
+													<FontAwesome5 name="credit-card" size={20} color="#1B2646" />
+												</View>
+												<View style={styles.transactionContainer}>
+													<Text style={styles.title}>MRT Online Service Provider</Text>
+													<View style={styles.transactionDetails}>
+														<Text style={styles.date}>{formatTransactionTimestamp(transaction.updatedAt.toString())}</Text>
+														<Text style={styles.balance}>- ₱{transaction.fare.toFixed(2)}</Text>
 													</View>
 												</View>
 											</View>
 										</View>
-									))}
-								</View>
-							) : (
-								<View style={styles.transactionDatesAndContainer}>
-									{renderNoTransactions()}
-								</View>
-							)}
-						</View>
-					)}
-				</TouchableOpacity>
-				{isLastItem && renderGradientCard()}
+									</View>
+								))}
+							</View>
+						) : (
+							<View style={styles.transactionDatesAndContainer}>
+								{renderNoTransactions()}
+							</View>
+						)}
+					</View>
+				)}
+				{isLastItem && renderGradientCard()
+				}
 			</>
 		);
 	};
@@ -341,9 +397,9 @@ const styles = StyleSheet.create({
 		paddingHorizontal: 20,
 	},
 	cardContainer: {
-		backgroundColor: '#FFFFF',
+		backgroundColor: '#EDF3FF',
 		padding: 18,
-		borderRadius: 10,
+		borderRadius: 20,
 		marginTop: 5,
 		shadowColor: '#000',
 		shadowOffset: {

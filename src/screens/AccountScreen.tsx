@@ -1,13 +1,13 @@
 /* eslint-disable react/no-unstable-nested-components */
 import { faClock, faKey, faMoon, faRedoAlt, faSignOutAlt, faTrashAlt, faUser } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import { NavigationProp } from '@react-navigation/native';
 import React, { useState } from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import RNExitApp from 'react-native-exit-app';
-import { Divider, IconButton, List, Switch, Text } from 'react-native-paper';
+import { IconButton, List, Switch, Text } from 'react-native-paper';
 import SimpleToast from 'react-native-simple-toast';
 import ConfirmationModal from '../components/ConfirmationModal';
-import { NavigationProp } from '@react-navigation/native';
 import { useUserInactivity } from '../components/UserActivityDetector'; // Import the user inactivity hook
 
 
@@ -57,13 +57,13 @@ const SettingsScreen: React.FC<AccouScreenProps> = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <List.Section>
-        <Divider style={styles.divider} />
+        {/* <Divider style={styles.divider} /> */}
         <List.Accordion
           title="Account Settings"
           titleStyle={styles.groupTitle}
           style={styles.groupContainer}
         >
-          <Divider style={styles.divider} />
+          {/* <Divider style={styles.divider} /> */}
           <List.Item
             title={<Text style={styles.itemText}>Change Username</Text>}
             left={() => <FontAwesomeIcon icon={faUser} style={styles.icon} />}
@@ -80,13 +80,13 @@ const SettingsScreen: React.FC<AccouScreenProps> = ({ navigation }) => {
             onPress={() => { setIsConfirmationModalVisible(true); setSelectedSetting('setTimeout');}}
           />
         </List.Accordion>
-        <Divider style={styles.divider} />
+        {/* <Divider style={styles.divider} /> */}
         <List.Accordion
           title="App Settings"
           titleStyle={styles.groupTitle}
           style={styles.groupContainer}
         >
-          <Divider style={styles.divider} />
+          {/* <Divider style={styles.divider} /> */}
           <List.Item
             title={<Text style={styles.itemText}>Dark Mode</Text>}
             left={() => <FontAwesomeIcon icon={faMoon} style={styles.icon} />}
@@ -105,7 +105,7 @@ const SettingsScreen: React.FC<AccouScreenProps> = ({ navigation }) => {
             onPress={() => { setIsConfirmationModalVisible(true); setSelectedSetting('deleteAllData');}}
           />
         </List.Accordion>
-        <Divider style={styles.divider} />
+        {/* <Divider style={styles.divider} /> */}
       </List.Section>
       <TouchableOpacity onPress={() => { setIsConfirmationModalVisible(true); setSelectedSetting('logout');}} style={styles.bottomContainer}>
         <Text style={styles.logoutText}>Logout</Text>
@@ -185,13 +185,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: '#F4F4F4',
+    backgroundColor: '#EDF3FF',
   },
   groupContainer: {
-    backgroundColor: '#EFEFEF',
+    backgroundColor: '#EDF3FF',
   },
   groupTitle: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
     color: '#333',
   },
