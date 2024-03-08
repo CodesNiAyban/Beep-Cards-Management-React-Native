@@ -60,6 +60,7 @@ const AddBeepCardScreen: React.FC<BeepCardsScreenProps> = ({ navigation }) => {
         setIsButtonDisabled(false);
         // Close camera after successful scan
         setCameraVisible(false);
+        SimpleToast.show(scannedValue + ' beep™ card', SimpleToast.SHORT, { tapToDismissEnabled: true, backgroundColor: '#172459' }); // Show error toast
       } else {
         console.log('Invalid beep™ card number: ', scannedValue);
       }
@@ -97,7 +98,7 @@ const AddBeepCardScreen: React.FC<BeepCardsScreenProps> = ({ navigation }) => {
         navigation.goBack();
       } else {
         console.log('Beep card not found.');
-        setBeepCardNumberError('beep™ card not found.');
+        setBeepCardNumberError('beep™ card not found or is already taken.');
         setIsButtonDisabled(true);
       }
     } catch (error) {

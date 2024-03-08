@@ -133,6 +133,8 @@ const WebSocketTester: React.FC<TapScreenProps> = ({ navigation }) => {
 
     useEffect(() => {
         setRefreshing(true);
+        handleReconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const sendMessage = (message: string) => {
