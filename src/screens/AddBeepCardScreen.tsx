@@ -1,5 +1,5 @@
-import { NavigationProp } from '@react-navigation/native';
-import React, { useState } from 'react';
+import { NavigationProp, useIsFocused } from '@react-navigation/native';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { MMKV } from 'react-native-mmkv';
 import { Button, Text, TextInput, useTheme } from 'react-native-paper';
@@ -17,14 +17,15 @@ interface BeepCardsScreenProps {
 const AddBeepCardScreen: React.FC<BeepCardsScreenProps> = ({ navigation }) => {
   const [beepCardNumber, setBeepCardNumber] = useState('637805');
   const [cardLabel, setCardLabel] = useState('');
-  const [beepCardNumberError, setBeepCardNumberError] = useState('');
   const [cardLabelError, setCardLabelError] = useState('');
+  const [beepCardNumberError, setBeepCardNumberError] = useState('');
   const [isButtonDisabled, setIsButtonDisabled] = useState(true);
   const [showFrontCamera, setShowFrontCamera] = useState(false); // State for toggling front/back camera
   const { hasPermission, requestPermission } = useCameraPermission();
   const mmkv = new MMKV();
   const androidID = mmkv.getString('phoneID');
   const theme = useTheme();
+  const isFocused = useIsFocused();
   const [cameraVisible, setCameraVisible] = useState(false); // State for toggling camera visibility
   const { resetTimer } = useUserInactivity();
 
@@ -62,6 +63,8 @@ const AddBeepCardScreen: React.FC<BeepCardsScreenProps> = ({ navigation }) => {
         setCameraVisible(false);
         SimpleToast.show(scannedValue + ' beep™ card', SimpleToast.SHORT, { tapToDismissEnabled: true, backgroundColor: '#172459' }); // Show error toast
       } else {
+        setCameraVisible(false);
+        SimpleToast.show('Invalid QR scanned, please try again', SimpleToast.SHORT, { tapToDismissEnabled: true, backgroundColor: '#172459' }); // Show error toast
         console.log('Invalid beep™ card number: ', scannedValue);
       }
     },
@@ -76,15 +79,30 @@ const AddBeepCardScreen: React.FC<BeepCardsScreenProps> = ({ navigation }) => {
     setShowFrontCamera(prevState => !prevState);
   };
 
+  useEffect(() => {
+    mmkv.delete('isAskingPermission');
+    return () => {
+      mmkv.delete('isAskingPermission');
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isFocused]);
+
   const toggleCamera = async () => {
+    const isAskingPermission = mmkv.getBoolean('isAskingPermission') || false; // Get the current value, default to false if not set
+    if (!isAskingPermission) {
+      mmkv.set('isAskingPermission', '1'); // Update MMKV value when permission is granted
+    }
     if (!hasPermission) {
       if (await requestPermission()) {
         setCameraVisible(!cameraVisible); // Ensure the camera is shown when toggling
+        mmkv.delete('isAskingPermission');
       }
     } else if (hasPermission) {
       setCameraVisible(!cameraVisible); // Ensure the camera is shown when toggling
+      mmkv.delete('isAskingPermission');
     }
   };
+
 
   const handleSave = async () => {
     try {
@@ -163,7 +181,7 @@ const AddBeepCardScreen: React.FC<BeepCardsScreenProps> = ({ navigation }) => {
                 onChangeText={handleCardLabelChange}
                 style={styles.textInput}
                 mode="outlined"
-                maxLength={10}
+                maxLength={20}
                 // eslint-disable-next-line react-native/no-inline-styles
                 outlineStyle={{ borderRadius: 10, borderColor: '#EAEAEA' }}
                 theme={{ ...theme, colors: { secondary: '#EAEAEA', outline: '#EAEAEA' } }}
@@ -184,7 +202,7 @@ const AddBeepCardScreen: React.FC<BeepCardsScreenProps> = ({ navigation }) => {
               <Camera
                 style={styles.camera}
                 device={device!}
-                isActive={true}
+                isActive={cameraVisible}
                 codeScanner={codeScanner}
               />
               <RNHoleView style={styles.maskView} holes={[{ x: 70, y: 100, width: 250, height: 250, borderRadius: 60 }]} />
@@ -343,7 +361,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'black',
     opacity: 0.55,
     zIndex: 0,
-},
+  },
 });
 
 export default AddBeepCardScreen;

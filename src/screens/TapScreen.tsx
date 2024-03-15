@@ -1,5 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
-import { NavigationProp } from '@react-navigation/native';
+import { NavigationProp, useIsFocused } from '@react-navigation/native';
 import React, { useEffect, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { RNHoleView } from 'react-native-hole-view';
@@ -32,6 +32,7 @@ const WebSocketTester: React.FC<TapScreenProps> = ({ navigation }) => {
     const [cameraOn, setCameraOn] = useState<boolean>(false);
     const { hasPermission, requestPermission } = useCameraPermission();
     const device = useCameraDevice(showFrontCamera ? 'front' : 'back');
+    const isFocused = useIsFocused();
     const mmkv = new MMKV();
     const [refreshing, setRefreshing] = useState(false);
     const [reconnectLoading, setReconnectLoading] = useState(false); // Add state for reconnect button loading
@@ -74,8 +75,6 @@ const WebSocketTester: React.FC<TapScreenProps> = ({ navigation }) => {
                     SimpleToast.show('Invalid QR Code', SimpleToast.LONG, { tapToDismissEnabled: true, backgroundColor: '#172459' });
                     setCameraOn(false);
                 }
-            } else {
-                // console.log('Invalid UUID number: ', scannedValue);
             }
         },
     });
@@ -89,6 +88,15 @@ const WebSocketTester: React.FC<TapScreenProps> = ({ navigation }) => {
         const regex = /^637805\d{9}$/;
         return regex.test(value);
     };
+
+    useEffect(() => {
+        mmkv.delete('isAskingPermission');
+        setReceivedMessage('');
+        return () => {
+            mmkv.delete('isAskingPermission');
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isFocused]);
 
     useEffect(() => {
         if (receivedMessage && !isValidBeepCard(receivedMessage)) {
@@ -113,10 +121,16 @@ const WebSocketTester: React.FC<TapScreenProps> = ({ navigation }) => {
             if (hasPermission) {
                 setCameraOn(true);
             } else {
+                const isAskingPermission = mmkv.getBoolean('isAskingPermission') || false; // Get the current value, default to false if not set
+                if (!isAskingPermission) {
+                    mmkv.set('isAskingPermission', '1'); // Update MMKV value when permission is granted
+                }
                 if (await requestPermission()) {
                     setCameraOn(true);
+                    mmkv.delete('isAskingPermission');
                 } else {
                     newSocket!.disconnect();
+                    mmkv.delete('isAskingPermission');
                 }
             }
         });
@@ -134,7 +148,7 @@ const WebSocketTester: React.FC<TapScreenProps> = ({ navigation }) => {
     useEffect(() => {
         setRefreshing(true);
         handleReconnect();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const sendMessage = (message: string) => {
@@ -162,6 +176,7 @@ const WebSocketTester: React.FC<TapScreenProps> = ({ navigation }) => {
     };
 
     const handleRefresh = () => {
+        setReceivedMessage('');
         setRefreshing(true);
         initializeSocket();
     };
@@ -182,12 +197,12 @@ const WebSocketTester: React.FC<TapScreenProps> = ({ navigation }) => {
                         <Camera
                             style={styles.camera}
                             device={device!}
-                            isActive={true}
+                            isActive={cameraOn}
                             codeScanner={codeScanner}
                         />
                         <RNHoleView style={styles.maskView} holes={[{ x: 70, y: 190, width: 250, height: 250, borderRadius: 60 }]} />
                         <View style={styles.qrLabel}>
-                            <Text style={styles.qrLabelText}>beep™ Tap</Text>
+                            <Text style={styles.qrLabelText}>beep™ QR</Text>
                         </View>
                         <View style={styles.scanRegion} />
                         <TouchableOpacity style={styles.toggleCameraContainer} onPress={switchCamera}>
@@ -207,7 +222,7 @@ const WebSocketTester: React.FC<TapScreenProps> = ({ navigation }) => {
                             onPress={handleReconnect}
                             loading={reconnectLoading}
                             disabled={reconnectLoading} // Disable the button when loading
-                            style={{backgroundColor: '#333', marginTop: 10}}
+                            style={{ backgroundColor: '#333', marginTop: 10 }}
                         >
                             {reconnectLoading ? 'Connecting...' : 'Reconnect'}
                         </Button>

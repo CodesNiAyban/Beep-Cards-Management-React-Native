@@ -17,6 +17,7 @@ import BeepCardsScreen from '../screens/BeepCardsScreen';
 import HomeScreen from '../screens/HomeScreen';
 import TapScreen from '../screens/TapScreen';
 import TransactionsScreen from '../screens/TransactionsScreen';
+import LoadingContainer from '../components/LoadingContainer';
 LogBox.ignoreLogs(['new NativeEventEmitter']); // Ignore log notification by message
 LogBox.ignoreAllLogs(); //Ignore all log notifications
 
@@ -79,6 +80,7 @@ const MainTabNavigator = () => {
   const [transactions, setTransactions] = useState<TransactionsModel[]>([]);
   const navigation = useNavigation<NativeStackNavigationProp<ParamListBase>>();
   const [appState, setAppState] = useState(AppState.currentState);
+  const [loading, setLoading] = useState(true);
   const mmkv = new MMKV();
   // let backgroundTimer: number | null = null;
   const androidID = mmkv.getString('phoneID');
@@ -102,8 +104,11 @@ const MainTabNavigator = () => {
     };
 
     const appInactiveHandler = () => {
-      SimpleToast.show('Logged out. App was Inactive.', SimpleToast.SHORT, { tapToDismissEnabled: true, backgroundColor: '#172459' });
-      navigateToPinScreen();
+      const isAskingPermission = mmkv.getBoolean('isAskingPermission') || false; // Get the current value, default to false if not set
+      if (!isAskingPermission) {
+        SimpleToast.show('Logged out. App was Inactive.', SimpleToast.SHORT, { tapToDismissEnabled: true, backgroundColor: '#172459' });
+        navigateToPinScreen();
+      }
     };
 
     const handleAppStateChange = (nextAppState: any) => {
@@ -118,6 +123,7 @@ const MainTabNavigator = () => {
     return () => {
       unsubscribe.remove(); // Use remove method to unsubscribe
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appState, navigation]);
 
   useEffect(() => {
@@ -127,8 +133,9 @@ const MainTabNavigator = () => {
         const data = await fetchBeepCard(androidID!);
         const transactionData = await getTransactions(androidID!);
         setBeepCards(data);
-        if (transactionData) {
+        if (transactionData && data) {
           setTransactions(transactionData);
+          setLoading(false);
         } else {
           console.log('Transactions not found');
         }
@@ -222,6 +229,12 @@ const MainTabNavigator = () => {
             options={{
               tabBarLabel: 'Tap',
             }}
+            listeners={{
+              tabPress: e => {
+                // add your conditions here
+                e.preventDefault(); // <-- this function blocks navigating to screen
+              },
+            }}
           />
           <Tab.Screen
             name="Transactions"
@@ -243,6 +256,7 @@ const MainTabNavigator = () => {
         </Tab.Navigator>
         <AddBeepCardButton onPress={showTapScreen} navigation={navigation} />
       </View>
+      <LoadingContainer loading={loading} />
     </UserInactivityWrapper >
   );
 };

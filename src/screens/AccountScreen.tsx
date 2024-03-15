@@ -184,11 +184,10 @@ const SettingsScreen: React.FC<AccouScreenProps> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
     backgroundColor: '#EDF3FF',
   },
   groupContainer: {
-    backgroundColor: '#EDF3FF',
+    backgroundColor: '#fff',
   },
   groupTitle: {
     fontSize: 14,

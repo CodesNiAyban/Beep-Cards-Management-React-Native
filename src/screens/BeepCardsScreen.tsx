@@ -1,19 +1,20 @@
 /* eslint-disable react-native/no-inline-styles */
+import { faEdit, faListAlt, faStar, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { NavigationProp, useIsFocused } from '@react-navigation/native';
 import React, { useEffect, useState } from 'react';
 import { FlatList, ImageBackground, RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import Swipeable from 'react-native-gesture-handler/Swipeable';
 import LinearGradient from 'react-native-linear-gradient';
+import { MMKV } from 'react-native-mmkv';
 import { Text } from 'react-native-paper';
+import SimpleToast from 'react-native-simple-toast';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import ConfirmationModal from '../components/ConfirmationModal';
 import { BeepCardItem as BeepCardsModel } from '../models/BeepCardsModel';
 import { TransactionItem as TransactionsModel } from '../models/TransactionsModel';
 import { deleteUser, fetchBeepCard, getTransactions } from '../network/BeepCardManagerAPI';
-import { MMKV } from 'react-native-mmkv';
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faTrash, faStar, faListAlt, faEdit } from '@fortawesome/free-solid-svg-icons';
-import SimpleToast from 'react-native-simple-toast';
-import Swipeable from 'react-native-gesture-handler/Swipeable';
+import EditBeepCardNameModal from '../components/EditBeepCardNameModal';
 
 interface BeepCardsScreenProps {
 	beepCards: BeepCardsModel[];
@@ -28,6 +29,8 @@ const BeepCardsScreen: React.FC<BeepCardsScreenProps> = ({ beepCards, setBeepCar
 	const [selectedBeepCard, setSelectedBeepCard] = useState<BeepCardsModel | null>(null);
 	const [isConfirmationModalVisible, setIsConfirmationModalVisible] = useState(false);
 	const [showTransactionsMap, setShowTransactionsMap] = useState<{ [key: string]: boolean }>({});
+	const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+	const [selectedBeepCardNumber, setSelectedBeepCardNumber] = useState('');
 	const [refreshing, setRefreshing] = useState(false);
 	const isFocused = useIsFocused();
 	const mmkv = new MMKV();
@@ -45,6 +48,22 @@ const BeepCardsScreen: React.FC<BeepCardsScreenProps> = ({ beepCards, setBeepCar
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [isFocused]);
 
+	const handleEditBeepCardName = (cardNumber: string) => {
+		setSelectedBeepCardNumber(cardNumber);
+		setIsEditModalVisible(true);
+	};
+
+	const handleShowTransactionHistory = async (cardNumber: string) => {
+		try {
+			// Set the selected beep card number in MMKV
+			mmkv.delete('selectedBeepCardHistory');
+			mmkv.set('selectedBeepCardHistory', cardNumber);
+			navigation.navigate('TransactionHistoryScreen');
+		} catch (error) {
+			console.error('Error setting selected beep card number:', error);
+			// Handle error as needed
+		}
+	};
 	const onRefresh = async () => {
 		console.log('Refresh baby');
 		setRefreshing(true);
@@ -81,12 +100,21 @@ const BeepCardsScreen: React.FC<BeepCardsScreenProps> = ({ beepCards, setBeepCar
 				setBeepCards(updatedBeepCards);
 				mmkv.delete(selectedBeepCard.UUIC.toString());
 
+				// Delete MMKV entry if the current selected Beep card is deleted
+				const selectedCard = mmkv.getString('selectedBeepCard');
+				if (selectedCard === selectedBeepCard.UUIC.toString()) {
+					mmkv.delete('selectedBeepCard');
+				}
+
 				onRefresh();
 				console.log('Beep card deleted:', selectedBeepCard?.UUIC);
+				SimpleToast.show('beep™ card ' + selectedBeepCard?.UUIC + ' deleted', SimpleToast.SHORT, { tapToDismissEnabled: true, backgroundColor: '#172459' });
+
 				setIsConfirmationModalVisible(false);
 				// Assuming you have a function to fetch updated beep cards, you can call it here to update the list
 			} catch (error) {
-				console.error('Error deleting beep card:', error);
+				console.error('Error deleting beep™ card:', error);
+				SimpleToast.show('Error deleting beep card', SimpleToast.SHORT, { tapToDismissEnabled: true, backgroundColor: '#172459' });
 				// Handle error as needed
 			}
 		}
@@ -106,7 +134,7 @@ const BeepCardsScreen: React.FC<BeepCardsScreenProps> = ({ beepCards, setBeepCar
 		<LinearGradient colors={['#C6E2FA', '#C6E2FA', '#FFFFFF']} style={styles.addBeepCardContainer}>
 			<View style={styles.cardDetails}>
 				<Text style={styles.addBeepCardText}>Add a beep™ Card</Text>
-				<Text style={styles.cardNumberText}>The Card Number is Found at the Back of your beep™ card.</Text>
+				<Text style={styles.cardNumberText}>The card number is found at the back of your beep™ card</Text>
 				<TouchableOpacity style={styles.addButton} onPress={openBeepCardScreen}>
 					<Text style={styles.addButtonLabel}>Add Card</Text>
 				</TouchableOpacity>
@@ -125,8 +153,7 @@ const BeepCardsScreen: React.FC<BeepCardsScreenProps> = ({ beepCards, setBeepCar
 				text: 'Edit',
 				backgroundColor: '#4CAF50', // Green color
 				onPress: () => {
-					// Implement edit functionality here
-					console.log('Edit beep card:', item.UUIC);
+					handleEditBeepCardName(item.UUIC.toString());
 				},
 				icon: <FontAwesomeIcon icon={faEdit} size={18} color="#FFFFFF" />,
 			},
@@ -142,10 +169,7 @@ const BeepCardsScreen: React.FC<BeepCardsScreenProps> = ({ beepCards, setBeepCar
 			{
 				text: 'Transactions',
 				backgroundColor: '#2196F3', // Blue color
-				onPress: () => {
-					// Implement transactions functionality here
-					console.log('View transactions for beep card:', item.UUIC);
-				},
+				onPress: () => { handleShowTransactionHistory(item.UUIC.toString()); },
 				icon: <FontAwesomeIcon icon={faListAlt} size={18} color="#FFFFFF" />,
 			},
 		];
@@ -172,7 +196,6 @@ const BeepCardsScreen: React.FC<BeepCardsScreenProps> = ({ beepCards, setBeepCar
 
 		const matchingTransactions = transactions.filter(transaction =>
 			transaction.UUIC === item.UUIC &&
-			!item.isActive &&
 			!transaction.tapIn
 		).slice(0, TRANSACTION_LIMIT);
 
@@ -188,6 +211,7 @@ const BeepCardsScreen: React.FC<BeepCardsScreenProps> = ({ beepCards, setBeepCar
 			if (selectedCard === item.UUIC.toString()) {
 				// If the current card is already selected, deselect it
 				mmkv.delete('selectedBeepCard');
+				SimpleToast.show('Beep card™ deselected', SimpleToast.SHORT, { tapToDismissEnabled: true, backgroundColor: '#172459' });
 			} else {
 				// Otherwise, select the current card
 				mmkv.set('selectedBeepCard', item.UUIC.toString());
@@ -229,7 +253,7 @@ const BeepCardsScreen: React.FC<BeepCardsScreenProps> = ({ beepCards, setBeepCar
 										height: '97.2%',
 										padding: 10,
 										borderTopLeftRadius: button.text === 'Edit' ? 5 : 0, // Apply border radius only to the top of Edit button
-										borderTopEndRadius:  button.text === 'Edit' ? 5 : 0,
+										borderTopEndRadius: button.text === 'Edit' ? 5 : 0,
 										borderBottomRightRadius: button.text === 'Transactions' ? 5 : 0, // Apply border radius only to the bottom of Transactions button
 										borderBottomLeftRadius: button.text === 'Transactions' ? 5 : 0,
 										flex: 1,
@@ -348,6 +372,11 @@ const BeepCardsScreen: React.FC<BeepCardsScreenProps> = ({ beepCards, setBeepCar
 				message={'Do you want to remove the following beep™ card from your list of beep™ cards?'}
 				beepCardDetails={selectedBeepCard ? `${selectedBeepCard.UUIC}` : ''}
 			/>
+			<EditBeepCardNameModal
+				isVisible={isEditModalVisible}
+				onClose={() => setIsEditModalVisible(false)}
+				beepCardNumber={selectedBeepCardNumber}
+			/>
 		</View>
 	);
 };
@@ -359,7 +388,7 @@ const styles = StyleSheet.create({
 	},
 	addBeepCardText: {
 		fontSize: 16,
-		fontWeight: 'bold',
+		fontWeight: '700',
 		color: '#333',
 		marginBottom: 10,
 		textAlign: 'center',
@@ -496,7 +525,7 @@ const styles = StyleSheet.create({
 	addBeepCardContainer: {
 		justifyContent: 'center',
 		alignItems: 'center',
-		height: 151, // Adjust the height as needed
+		height: 150, // Adjust the height as needed
 		borderRadius: 10,
 		borderWidth: 1, // Border width for the outline
 		borderColor: '#233253',

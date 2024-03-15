@@ -89,6 +89,12 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
+        release {
+            storeFile file('private_key.pepk')
+            storePassword 'password'
+            keyAlias 'beep'
+            keyPassword 'password'
+        }
     }
     buildTypes {
         debug {

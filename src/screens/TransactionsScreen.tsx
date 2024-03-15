@@ -16,7 +16,6 @@ interface TransactionScreenProps {
   navigation: NavigationProp<any>;
 }
 
-
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const TransactionScreen: React.FC<TransactionScreenProps> = ({ beepCards, setBeepCards, transactions, setTransactions, navigation }) => {
   const [expandedGroups, setExpandedGroups] = useState<{ [key: string]: boolean }>({});
@@ -58,7 +57,6 @@ const TransactionScreen: React.FC<TransactionScreenProps> = ({ beepCards, setBee
       setRefreshing(false);
     }
   };
-
 
   const renderItem = ({ item }: { item: TransactionsModel }) => {
     return (
@@ -170,12 +168,11 @@ const TransactionScreen: React.FC<TransactionScreenProps> = ({ beepCards, setBee
     return formattedDate;
   };
 
-
   const renderDateHeader = (date: string) => {
 
     return (
       <TouchableOpacity onPress={() => toggleGroup(date)} style={styles.dateHeaderContainer}>
-        <FontAwesome5 name="calendar" size={20} color="#fff" style={styles.marginLeft} />
+        <FontAwesome5 name="calendar" size={20} color="#3498DB" style={styles.marginLeft} />
         <Text style={styles.dateHeaderText}>{formatDate(date)}</Text>
         <FontAwesome5 name={expandedGroups[date] ? 'chevron-up' : 'chevron-down'} size={20} color="#fff" />
       </TouchableOpacity>
@@ -185,21 +182,21 @@ const TransactionScreen: React.FC<TransactionScreenProps> = ({ beepCards, setBee
   const renderTransactionsForDate = (date: string) => {
     const transactionsForDate = groupedTransactions[date];
     return expandedGroups[date] ? (
-      <View>
+      <ScrollView>
         {transactionsForDate.map(transaction => (
           <View key={transaction._id}>
             {renderItem({ item: transaction })}
             <View style={styles.divider} />
           </View>
         ))}
-      </View>
+      </ScrollView>
     ) : null;
   };
 
   const renderEmptyMessage = () => (
     <View style={styles.emptyContainer}>
       <Text style={styles.emptyText}>
-        No Transactions Found.{'\n'}Click Add Button to Add Transactions.
+        No Transactions Found.
       </Text>
     </View>
   );
@@ -224,18 +221,19 @@ const TransactionScreen: React.FC<TransactionScreenProps> = ({ beepCards, setBee
 
 const styles = StyleSheet.create({
   scrollContainer: {
-    backgroundColor: '#EDF3FF',
+    backgroundColor: '#FAFAFA',
     flexGrow: 1,
   },
   container: {
     flex: 1,
-    backgroundColor: '#EDF3FF',
+    backgroundColor: '#FAFAFA',
     padding: 20,
   },
   card: {
     margin: 5,
     borderRadius: 10,
     backgroundColor: '#fff',
+    zIndex: 99999,
   },
   header: {
     flexDirection: 'row',
@@ -270,7 +268,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   divider: {
-    marginVertical: 8,
+    marginVertical: 2,
   },
   icon: {
     marginRight: 4,

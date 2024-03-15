@@ -7,8 +7,8 @@ export default function Component() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Hello, Ayban</Text>
-        <FontAwesome5 name="microscope" style={styles.icon} />
+        <Text style={styles.title}>Hello, User</Text>
+        <FontAwesome5 name="microscope" color={'#3498DB'} size={24} />
       </View>
       <View style={styles.buttonContainer}>
         <Button mode="contained" style={styles.button}>
@@ -20,20 +20,13 @@ export default function Component() {
       </View>
       <View style={styles.card}>
         <Text style={styles.cardTitle}>beep™ card</Text>
-        <Text style={styles.cardNumber}>6378050062828679</Text>
+        <Text style={styles.cardNumber}>637805XXXXXXXXX</Text>
         <View style={styles.cardOptions}>
           <OptionIcon name="wallet" label="Buy beep™ Load" />
           <OptionIcon name="download" label="Fetch beep™ Load" />
           <OptionIcon name="check-circle" label="Check Balance" />
           <OptionIcon name="credit-card" label="Enroll beep™ Card" />
         </View>
-      </View>
-      <View style={styles.upgradeContainer}>
-        <Text style={styles.upgradeTitle}>Upgrade Premium</Text>
-        <Text style={styles.upgradeDescription}>
-          Upgrade now to get access to all app features
-        </Text>
-        <FontAwesome5 name="check" style={styles.upgradeIcon} />
       </View>
       <View style={styles.gridContainer}>
         <OptionIcon name="ticket-alt" label="beep™ QR Tickets" />
@@ -66,7 +59,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#EDF3FF',
-    padding: 16,
+    padding: 20,
     color: 'white',
   },
   header: {
@@ -78,6 +71,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: 'bold',
+    color: '#333',
   },
   icon: {
     fontSize: 24,
@@ -95,45 +89,26 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: '#333',
     borderRadius: 8,
-    padding: 16,
+    padding: 14,
     marginBottom: 12,
   },
   cardTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: '600',
     marginBottom: 8,
     backgroundColor: '#333',
   },
   cardNumber: {
-    fontSize: 14,
-    color: '#2C3E50',
+    fontSize: 16,
+    color: '#fff',
     marginBottom: 8,
   },
   cardOptions: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-  },
-  upgradeContainer: {
-    backgroundColor: '#F1C40F',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 12,
-    flexDirection: 'column',
     alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  upgradeTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#2C3E50',
-  },
-  upgradeDescription: {
-    fontSize: 14,
-    color: '#2C3E50',
-  },
-  upgradeIcon: {
-    fontSize: 24,
-    color: '#F39C12',
+    marginBottom: 5,
+    marginTop: 20,
   },
   gridContainer: {
     flexDirection: 'row',
@@ -142,14 +117,15 @@ const styles = StyleSheet.create({
   },
   option: {
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 20,
   },
   optionIcon: {
     fontSize: 24,
     color: '#3498DB',
   },
   optionLabel: {
-    fontSize: 12,
+    fontSize: 10,
     color: '#3498DB',
+    padding: 4,
   },
 });

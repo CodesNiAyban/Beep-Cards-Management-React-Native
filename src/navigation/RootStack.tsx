@@ -3,7 +3,8 @@ import React from 'react';
 import AddBeepCardScreen from '../screens/AddBeepCardScreen';
 import CreatePinScreen from '../screens/CreatePinScreen';
 import PinScreen from '../screens/PinScreen';
-import MainTabNavigator from './MainTabNavigator'; // Corrected import
+import MainTabNavigator from './MainTabNavigator';
+import TransactionHistoryScreen from '../screens/TransactionHistoryScreen';
 
 const Stack = createStackNavigator();
 
@@ -20,6 +21,24 @@ const RootStackNavigator = () => {
         options={{
           headerShown: true,
           title: 'Add a beep™ Card',
+          headerStyle: {
+            backgroundColor: '#172459', // Background color for the header
+          },
+          headerTitleStyle: {
+            color: '#FFFFFF', // Text color for the header title
+            fontSize: 20, // Font size for the header title
+          },
+          headerTitleAlign: 'center', // Center align the header title text
+          headerTintColor: '#FFFFFF', // Color of the back button and header icons
+          headerBackTitleVisible: false, // Hide the back button text
+        }}
+      />
+      <Stack.Screen
+        name="TransactionHistoryScreen"
+        component={TransactionHistoryScreen}
+        options={{
+          headerShown: true,
+          title: 'Transactions',
           headerStyle: {
             backgroundColor: '#172459', // Background color for the header
           },

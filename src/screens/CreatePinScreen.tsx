@@ -43,7 +43,7 @@ const CreatePinScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   const handlePinCreation = async () => {
-    if (pin === verifyPin) {
+    if (pin === verifyPin && pin.length === 4) {
       try {
         mmkv.set('pin', pin);
         mmkv.set('phoneID', (await DeviceInfo.getAndroidId()).toString());
@@ -53,7 +53,7 @@ const CreatePinScreen: React.FC<Props> = ({ navigation }) => {
         SimpleToast.show('Unknown error has occured.' || 'PIN creation failed. ' + error, SimpleToast.SHORT, {tapToDismissEnabled: true, backgroundColor: '#172459'}); // Use SimpleToast instead of Toast
       }
     } else {
-      SimpleToast.show('PIN does not match', SimpleToast.SHORT, {tapToDismissEnabled: true, backgroundColor: '#172459'}); // Use SimpleToast instead of Toast
+      SimpleToast.show('PIN does not match or is not 4 digits', SimpleToast.SHORT, {tapToDismissEnabled: true, backgroundColor: '#172459'}); // Use SimpleToast instead of Toast
     }
   };
 
